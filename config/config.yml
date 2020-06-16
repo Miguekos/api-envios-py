@@ -1,0 +1,12 @@
+fastapi:
+  debug: true
+
+databases:
+  default:
+    ENGINE: 'mongodb'
+    DRIVER: 'motor'
+    NAME: 'tuenvioexpress'
+    USER: 'tancho'
+    PASSWORD: '4dm1n4dm1n'
+    HOST: 'localhost'
+    PORT: 27017
