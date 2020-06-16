@@ -58,7 +58,6 @@ def validate_object_id(id_: str):
         raise HTTPException(status_code=400)
     return _id
 
-
 async def _get_or_404(id_: str):
     _id = validate_object_id(id_)
     user = await DB.users.find_one({"_id": _id})
@@ -72,6 +71,11 @@ def fix_user_id(user):
     user["id_"] = str(user["_id"])
     return user
 
+@user_router.get("/count")
+async def get_count():
+    # print("qweqweqwe")
+    conteo = await DB.users.count_documents({})
+    return conteo
 
 @user_router.get("/", response_model=List[UserOnDB])
 async def get_all_users(rol: UserRol = None, limit: int = 10, skip: int = 0):

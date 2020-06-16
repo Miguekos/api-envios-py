@@ -1,5 +1,3 @@
-# backend/tancho/config/config.yml
-
 from motor.motor_asyncio import AsyncIOMotorClient
 import yaml
 
@@ -24,3 +22,4 @@ DB = DB_CLIENT[CONF.get("databases", dict())["default"]["NAME"]]
 
 def close_db_client():
     DB_CLIENT.close()
+
