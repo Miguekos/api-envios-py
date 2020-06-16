@@ -6,7 +6,7 @@ databases:
     ENGINE: 'mongodb'
     DRIVER: 'motor'
     NAME: 'tuenvioexpress'
-    USER: 'tancho'
-    PASSWORD: '4dm1n4dm1n'
-    HOST: 'localhost'
-    PORT: 27017
+    USER: ''
+    PASSWORD: ''
+    HOST: '95.111.235.214'
+    PORT: 32773
