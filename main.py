@@ -71,6 +71,9 @@ async def app_shutdown():
     # This does finish the DB driver connection.
     config.close_db_client()
 
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info", reload=True)
 #
 # if __name__ == "__main__":
 #     uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info", loop="asyncio")
