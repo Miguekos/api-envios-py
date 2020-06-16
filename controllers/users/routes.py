@@ -72,7 +72,7 @@ def fix_user_id(user):
     return user
 
 @user_router.get("/count")
-async def get_count():
+async def get_count_user():
     # print("qweqweqwe")
     conteo = await DB.users.count_documents({})
     return conteo
