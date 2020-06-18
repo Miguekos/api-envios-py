@@ -43,17 +43,18 @@ async def get_count():
 
 
 @registros_router.get("/", response_model=List[RegistroOnDB])
-async def get_all_registros(dni: int = None, limit: int = 10, skip: int = 0):
+async def get_all_registros(dni: str = None, estado: str = None, limit: int = 10, skip: int = 0):
     """[summary]
     Gets all registros.
 
     [description]
     Endpoint to retrieve registros.
     """
-    if dni is None:
+    if dni is None and estado is None:
         registro_cursor = DB.registros.find().skip(skip).limit(limit)
     else:
-        registro_cursor = DB.registros.find({"responsable": dni}).skip(skip).limit(limit)
+        print({"responsable": dni, "estado": estado})
+        registro_cursor = DB.registros.find({"responsable": dni, "estado": estado}).skip(skip).limit(limit)
     registros = await registro_cursor.to_list(length=limit)
     return list(map(fix_id, registros))
 
