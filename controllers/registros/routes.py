@@ -1,5 +1,6 @@
 # backend/tancho/registros/routes.py
 import logging
+from datetime import datetime
 from typing import List
 
 from bson.objectid import ObjectId
@@ -30,8 +31,25 @@ async def _get_or_404(id_: str):
         raise HTTPException(status_code=404, detail="not found")
 
 
+def formatDate(v):
+    import pytz
+    lima = pytz.timezone('America/Lima')
+    fehcaEvaluarTest = v
+    # tz = pytz.timezone('America/St_Johns')
+    fehcaEvaluarTest = fehcaEvaluarTest.replace(tzinfo=pytz.UTC)
+    fehcaEvaluar = fehcaEvaluarTest.astimezone(lima)
+    # print("fehcaEvaluar")
+    # print(fehcaEvaluar)
+    # print(datetime.now(lima))
+    # return v or datetime.now(lima)
+    return fehcaEvaluar
+
+
 def fix_id(resp):
+    # print(resp)
     resp["id_"] = str(resp["_id"])
+    resp["created_at"] = formatDate(resp["created_at"])
+    resp["last_modified"] = formatDate(resp["last_modified"])
     return resp
 
 
@@ -43,24 +61,52 @@ async def get_count():
 
 
 @registros_router.get("/", response_model=List[RegistroOnDB])
-async def get_all_registros(dni: str = None, estado: str = None, limit: int = 10, skip: int = 0):
+async def get_all_registros(dni: str = None, estado: str = None, ini_date: str = None, fin_date: str = None,
+                            limit: int = 10, skip: int = 0):
     """[summary]
     Gets all registros.
 
     [description]
     Endpoint to retrieve registros.
     """
+
+    print("dni: ", dni)
+    print("estado: ", estado)
+    print("ini_date", ini_date)
+    print("fin_date", fin_date)
+    in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%Y-%m-%d %H:%M:%S')
+    out_time_obj = datetime.strptime("{} 00:00:00".format(fin_date), '%Y-%m-%d %H:%M:%S')
+    global registro_cursor
+    if dni == "null":
+        dni = None
+    if estado == "null":
+        estado = None
+    if ini_date == "null":
+        ini_date = None
+    if fin_date == "null":
+        fin_date = None
     if dni is None and estado is None:
-        registro_cursor = DB.registros.find().skip(skip).limit(limit)
-    else:
+        # registro_cursor = DB.registros.find({'created_at' : {"$gte": from_date, "$lt": to_date}}).skip(skip).limit(limit)
+        registro_cursor = DB.registros.find({'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
+
+    elif dni is None and estado:
+        registro_cursor = DB.registros.find({"estado": estado}).skip(skip).limit(limit)
+
+    elif dni and estado is None:
+        print("aqui")
+        registro_cursor = DB.registros.find({"responsable": dni}).skip(skip).limit(limit)
+
+    elif dni and estado and ini_date and fin_date:
+        print("Por fecha")
+        registro_cursor = DB.registros.find({'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
+
+    elif dni and estado:
         print({"responsable": dni, "estado": estado})
         registro_cursor = DB.registros.find({"responsable": dni, "estado": estado}).skip(skip).limit(limit)
-    registros = await registro_cursor.to_list(length=limit)
-    return list(map(fix_id, registros))
+
+    return list(map(fix_id, await registro_cursor.to_list(length=limit)))
 
 
-#
-#
 # @registros_router.post("/", response_model=RegistroOnDB)
 @registros_router.post("/")
 async def add_registro(registro: RegistroBase):
@@ -100,9 +146,12 @@ async def get_registro_by_id(id_: ObjectId = Depends(validate_object_id)):
     [description]
     Endpoint to retrieve an specific registro.
     """
+    print("#############################################")
     registro = await DB.registros.find_one({"_id": id_})
     if registro:
         registro["id_"] = str(registro["_id"])
+        registro["created_at"] = formatDate(registro["created_at"])
+        registro["last_modified"] = formatDate(registro["last_modified"])
         return registro
     else:
         raise HTTPException(status_code=404, detail="not found")

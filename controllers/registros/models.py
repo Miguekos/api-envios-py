@@ -56,3 +56,15 @@ class RegistroOnDB(RegistroBase):
         _id: str {[ObjectId]} -- [id at DB]
     """
     id_ : str
+    created_at: datetime = None
+    last_modified: datetime = None
+
+    @validator('created_at', pre=True, always=True)
+    def default_ts_created(cls, v):
+        lima = timezone('America/Lima')
+        # print(datetime.now(lima))
+        return v or datetime.now(lima)
+
+    @validator('last_modified', pre=True, always=True)
+    def default_ts_modified(cls, v, *, values, **kwargs):
+        return v or values['created_at']
