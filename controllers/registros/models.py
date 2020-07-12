@@ -34,12 +34,11 @@ class RegistroBase(BaseModel):
 
     @validator('created_at', pre=True, always=True)
     def default_ts_created(cls, v):
-        lima = timezone('America/Lima')
-        # print(datetime.now(lima))
-        return v or datetime.now(lima)
+        return v or datetime.now()
 
     @validator('last_modified', pre=True, always=True)
     def default_ts_modified(cls, v, *, values, **kwargs):
+        print(v)
         return v or values['created_at']
 
 

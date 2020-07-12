@@ -74,8 +74,6 @@ async def get_all_registros(dni: str = None, estado: str = None, ini_date: str =
     print("estado: ", estado)
     print("ini_date", ini_date)
     print("fin_date", fin_date)
-    in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%Y-%m-%d %H:%M:%S')
-    out_time_obj = datetime.strptime("{} 00:00:00".format(fin_date), '%Y-%m-%d %H:%M:%S')
     global registro_cursor
     if dni == "null":
         dni = None
@@ -87,23 +85,29 @@ async def get_all_registros(dni: str = None, estado: str = None, ini_date: str =
         fin_date = None
     if dni is None and estado is None:
         # registro_cursor = DB.registros.find({'created_at' : {"$gte": from_date, "$lt": to_date}}).skip(skip).limit(limit)
-        registro_cursor = DB.registros.find({'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
+        registro_cursor = DB.registros.find().skip(skip).limit(limit)
 
-    elif dni is None and estado:
-        registro_cursor = DB.registros.find({"estado": estado}).skip(skip).limit(limit)
+    # elif dni is None and estado:
+    #     registro_cursor = DB.registros.find({"estado": estado}).skip(skip).limit(limit)
 
-    elif dni and estado is None:
-        print("aqui")
-        registro_cursor = DB.registros.find({"responsable": dni}).skip(skip).limit(limit)
+    # elif dni and estado is None:
+    #     print("aqui")
+    #     registro_cursor = DB.registros.find({"responsable": dni}).skip(skip).limit(limit)
+    elif dni is None and estado and ini_date and fin_date:
+        print("Sin DNI")
+        in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
+        out_time_obj = datetime.strptime("{} 23:59:59".format(fin_date), '%d/%m/%Y %H:%M:%S')
+        registro_cursor = DB.registros.find({'estado' : estado,'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
 
     elif dni and estado and ini_date and fin_date:
-        print("Por fecha")
-        registro_cursor = DB.registros.find({'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
+        print("Con DNI")
+        in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
+        out_time_obj = datetime.strptime("{} 23:59:59".format(fin_date), '%d/%m/%Y %H:%M:%S')
+        registro_cursor = DB.registros.find({"responsable": dni, 'estado' : estado,'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
 
-    elif dni and estado:
-        print({"responsable": dni, "estado": estado})
-        registro_cursor = DB.registros.find({"responsable": dni, "estado": estado}).skip(skip).limit(limit)
-
+    # elif dni and estado:
+    #     print({"responsable": dni, "estado": estado})
+    #     registro_cursor = DB.registros.find({"responsable": dni, "estado": estado}).skip(skip).limit(limit)
     return list(map(fix_id, await registro_cursor.to_list(length=limit)))
 
 
