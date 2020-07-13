@@ -16,6 +16,7 @@ origins = [
     "http://localhost:8080",
     "http://localhost:8000",
     "http://192.168.0.34:8080",
+    "http://95.111.235.214:9776",
     "https://tuenvioexpress.apps.com.pe/"
 ]
 
