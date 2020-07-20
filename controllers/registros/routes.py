@@ -56,8 +56,10 @@ def fix_id(resp):
 @registros_router.get("/count")
 async def get_count():
     # print("qweqweqwe")
-    conteo = await DB.registros.count_documents({})
-    return conteo
+    conteo = DB.registros.find({},{'registro' : 1}).sort('registro', -1).limit(1)
+    conteo = await conteo.to_list(length=1)
+    print(conteo[0]['registro'])
+    return conteo[0]['registro']
 
 
 @registros_router.get("/", response_model=List[RegistroOnDB])
