@@ -112,6 +112,12 @@ async def get_all_registros(dni: str = None, estado: str = None, ini_date: str =
             {"responsable": dni, 'estado': estado, 'created_at': {"$gte": in_time_obj + timedelta(hours=5), "$lt": out_time_obj + timedelta(hours=5)}}).skip(
             skip).limit(limit)
 
+    elif dni and estado and ini_date is None and fin_date is None:
+        print("Con DNI")
+        registro_cursor = DB.registros.find(
+            {"responsable": dni, 'estado': estado}).skip(
+            skip).limit(limit)
+
     # elif dni and estado:
     #     print({"responsable": dni, "estado": estado})
     #     registro_cursor = DB.registros.find({"responsable": dni, "estado": estado}).skip(skip).limit(limit)
