@@ -127,10 +127,22 @@ async def add_registro(registro: RegistroBase):
     [description]
     Endpoint to add a new user.
     """
-    registro_op = await DB.registros.insert_one(registro.dict())
+    try:
+        conteo = DB.registros.find({}, {'registro': 1}).sort('registro', -1).limit(1)
+        conteo = await conteo.to_list(length=1)
+        # registro['registro'] = conteo[0]['registro']
+        registro = registro.dict()
+        registro['registro'] = conteo[0]['registro'] + 1
+    except:
+        registro['registro'] = 0
+    # print(registro)
+    registro_op = await DB.registros.insert_one(registro)
     # await DB.registros.update_one(registro.dict())
     # print(registro_op.inserted_id)
-    return {"id": str(registro_op.inserted_id)}
+    return {
+        "id": str(registro_op.inserted_id),
+        "registro" : registro['registro']
+    }
 
     # if registro_op.inserted_id:
     #     registro = await _get_or_404(registro_op.inserted_id)
@@ -167,9 +179,6 @@ async def get_registro_by_id(id_: ObjectId = Depends(validate_object_id)):
     else:
         raise HTTPException(status_code=404, detail="not found")
 
-
-#
-#
 @registros_router.delete(
     "/{id_}",
     dependencies=[Depends(_get_or_404)],

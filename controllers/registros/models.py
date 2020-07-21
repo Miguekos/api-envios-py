@@ -25,7 +25,7 @@ class RegistroBase(BaseModel):
     control: str
     valordeflete: str
     proveedores: str
-    registro: int
+    registro: int = None
     estado: str = "0"
     user_registrante: str = None
     responsable: str = None
