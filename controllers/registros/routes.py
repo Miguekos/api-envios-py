@@ -1,6 +1,6 @@
 # backend/tancho/registros/routes.py
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 from bson.objectid import ObjectId
@@ -56,7 +56,7 @@ def fix_id(resp):
 @registros_router.get("/count")
 async def get_count():
     # print("qweqweqwe")
-    conteo = DB.registros.find({},{'registro' : 1}).sort('registro', -1).limit(1)
+    conteo = DB.registros.find({}, {'registro': 1}).sort('registro', -1).limit(1)
     conteo = await conteo.to_list(length=1)
     print(conteo[0]['registro'])
     return conteo[0]['registro']
@@ -64,7 +64,7 @@ async def get_count():
 
 @registros_router.get("/", response_model=List[RegistroOnDB])
 async def get_all_registros(dni: str = None, estado: str = None, ini_date: str = None, fin_date: str = None,
-                            limit: int = 10, skip: int = 0):
+                            limit: int = 1000, skip: int = 0):
     """[summary]
     Gets all registros.
 
@@ -99,13 +99,18 @@ async def get_all_registros(dni: str = None, estado: str = None, ini_date: str =
         print("Sin DNI")
         in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
         out_time_obj = datetime.strptime("{} 23:59:59".format(fin_date), '%d/%m/%Y %H:%M:%S')
-        registro_cursor = DB.registros.find({'estado' : estado,'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
+        print("Traer datos de {} hasta {}".format(in_time_obj + timedelta(hours=5), out_time_obj + timedelta(hours=5)))
+        registro_cursor = DB.registros.find(
+            {'estado': estado, 'created_at': {"$gte": in_time_obj + timedelta(hours=5), "$lt": out_time_obj + timedelta(hours=5)}}).skip(skip).limit(limit)
+        # print(await registro_cursor.to_list(length=1000))
 
     elif dni and estado and ini_date and fin_date:
         print("Con DNI")
         in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
         out_time_obj = datetime.strptime("{} 23:59:59".format(fin_date), '%d/%m/%Y %H:%M:%S')
-        registro_cursor = DB.registros.find({"responsable": dni, 'estado' : estado,'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
+        registro_cursor = DB.registros.find(
+            {"responsable": dni, 'estado': estado, 'created_at': {"$gte": in_time_obj + timedelta(hours=5), "$lt": out_time_obj + timedelta(hours=5)}}).skip(
+            skip).limit(limit)
 
     # elif dni and estado:
     #     print({"responsable": dni, "estado": estado})
