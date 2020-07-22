@@ -78,7 +78,7 @@ async def get_count_user():
     return conteo
 
 @user_router.get("/", response_model=List[UserOnDB])
-async def get_all_users(rol: UserRol = None, limit: int = 10, skip: int = 0):
+async def get_all_users(rol: UserRol = None, limit: int = 1000, skip: int = 0):
     """[summary]
     Gets all users.
 
