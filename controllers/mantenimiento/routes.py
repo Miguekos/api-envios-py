@@ -7,10 +7,16 @@ from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
 from config.config import DB, CONF
-from .models import MantenimientoBase, MantenimientoOnDB
+from .models import MantenimientoBase, MantenimientoOnDB, MantenimientoFilter
 
 mantenimiento_router = APIRouter()
 
+async def nameMobil(val):
+    resp = await DB.users.find_one({"dni": "{}".format(val)})
+    print("###################")
+    print(resp['name'])
+    print("###################")
+    return resp['name']
 
 def validate_object_id(id_: str):
     try:
@@ -108,6 +114,42 @@ async def get_registro_by_id(id_: ObjectId = Depends(validate_object_id)):
     else:
         raise HTTPException(status_code=404, detail="not found")
 
+# buscar por registro y control
+@mantenimiento_router.get(
+    "/filtros/{tipo}/{id_}",
+    response_model=MantenimientoFilter
+)
+async def get_registro_by_filter(id_: int, tipo: str = 1):
+    """[summary]
+    Get one registro by ID.
+
+    [description]
+    Endpoint to retrieve an specific registro.
+    """
+    print(id_)
+    print(tipo)
+    if tipo == "1":
+        print("#############################################")
+        registro = await DB.registros.find_one({"registro": id_})
+        if registro:
+            registro["id_"] = str(registro["_id"])
+            registro["created_at"] = formatDate(registro["created_at"])
+            registro["last_modified"] = formatDate(registro["last_modified"])
+            registro["responsable_name"] = await nameMobil(registro["responsable"])
+            return registro
+    elif tipo == "2":
+        print("#############################################")
+        registro = await DB.registros.find_one({"control": "{}".format(id_)})
+        if registro:
+            registro["id_"] = str(registro["_id"])
+            registro["created_at"] = formatDate(registro["created_at"])
+            registro["last_modified"] = formatDate(registro["last_modified"])
+            registro["responsable_name"] = await nameMobil(registro["responsable"])
+            return registro
+    else:
+        raise HTTPException(status_code=404, detail="not found")
+
+
 @mantenimiento_router.delete(
     "/proveedores/{id_}",
     dependencies=[Depends(_get_or_404)],
@@ -125,8 +167,6 @@ async def delete_registro_by_id(id_: str):
         return {"status": f"se elimino la cuenta de: {registros_op.deleted_count}"}
 
 
-#
-#
 @mantenimiento_router.put(
     "/proveedores/{id_}",
     dependencies=[Depends(validate_object_id), Depends(_get_or_404)],
@@ -146,3 +186,6 @@ async def update_registro(id_: str, registro_data: dict):
         return await _get_or_404(id_)
     else:
         raise HTTPException(status_code=304)
+
+
+
