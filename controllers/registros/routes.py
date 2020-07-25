@@ -1,6 +1,7 @@
 # backend/tancho/registros/routes.py
 import logging
 from datetime import datetime, timedelta
+from pytz import timezone
 from typing import List
 
 from bson.objectid import ObjectId
@@ -11,6 +12,18 @@ from .models import RegistroBase, RegistroOnDB
 
 registros_router = APIRouter()
 
+
+async def nameMobil(val):
+    try:
+        resp = await DB.users.find_one({"dni": "{}".format(val)})
+        print("###################")
+        print(resp['name'])
+        print("###################")
+        val['responsable_name'] = resp['name']
+        val["id_"] = str(val["_id"])
+        return val
+    except:
+        print("Ya tenia")
 
 def validate_object_id(id_: str):
     try:
@@ -46,10 +59,17 @@ def formatDate(v):
 
 
 def fix_id(resp):
-    # print(resp)
     resp["id_"] = str(resp["_id"])
-    resp["created_at"] = formatDate(resp["created_at"])
-    resp["last_modified"] = formatDate(resp["last_modified"])
+    #try:
+    #    asd = resp["responsable_name"]
+     #   print("ya tiene",asd)
+    #except:
+     #   print("responsable", resp["responsable"])
+      #  resp["responsable_name"] = nameMobil(resp["responsable"])
+        #resp["responsable_name"] = nameMobil(resp["responsable"])
+    #resp["created_at"] = formatDate(resp["created_at"])
+    #print("resp", resp)
+    #resp["last_modified"] = formatDate(resp["last_modified"])
     return resp
 
 
@@ -114,14 +134,19 @@ async def get_all_registros(dni: str = None, estado: str = None, ini_date: str =
 
     elif dni and estado and ini_date is None and fin_date is None:
         print("Con DNI")
-        registro_cursor = DB.registros.find(
-            {"responsable": dni, 'estado': estado}).skip(
-            skip).limit(limit)
+        registro_cursor = DB.registros.find({"responsable": dni, 'estado': estado}).skip(skip).limit(limit)
 
     # elif dni and estado:
     #     print({"responsable": dni, "estado": estado})
     #     registro_cursor = DB.registros.find({"responsable": dni, "estado": estado}).skip(skip).limit(limit)
+    #asd = list(map(fix_id, await registro_cursor.to_list(length=limit)))
+    #asd = await nameMobil(asd['responsable'])
+    #for document in await registro_cursor.to_list(length=1000):
+        # print("document", await nameMobil(document['responsable']))
+        #document['responsable_name'] = await nameMobil(document['responsable'])
+        #document = fix_id(document)
     return list(map(fix_id, await registro_cursor.to_list(length=limit)))
+
 
 
 # @registros_router.post("/", response_model=RegistroOnDB)
@@ -145,9 +170,10 @@ async def add_registro(registro: RegistroBase):
     registro_op = await DB.registros.insert_one(registro)
     # await DB.registros.update_one(registro.dict())
     # print(registro_op.inserted_id)
+    print(registro.pop('_id'))
     return {
         "id": str(registro_op.inserted_id),
-        "registro" : registro['registro']
+        "registro" : registro
     }
 
     # if registro_op.inserted_id:
@@ -179,8 +205,8 @@ async def get_registro_by_id(id_: ObjectId = Depends(validate_object_id)):
     registro = await DB.registros.find_one({"_id": id_})
     if registro:
         registro["id_"] = str(registro["_id"])
-        registro["created_at"] = formatDate(registro["created_at"])
-        registro["last_modified"] = formatDate(registro["last_modified"])
+        #registro["created_at"] = formatDate(registro["created_at"])
+        #registro["last_modified"] = formatDate(registro["last_modified"])
         return registro
     else:
         raise HTTPException(status_code=404, detail="not found")
@@ -216,6 +242,7 @@ async def update_registro(id_: str, registro_data: dict):
     [description]
     Endpoint to update an specific registro with some or all fields.
     """
+    registro_data["last_modified"] = datetime.now()
     registro_op = await DB.registros.update_one(
         {"_id": ObjectId(id_)}, {"$set": registro_data}
     )

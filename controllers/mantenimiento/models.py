@@ -85,6 +85,8 @@ class MantenimientoFilter(MantenimientoBase):
     user_registrante: str = None
     responsable: str = None
     responsable_name: str = None
+    modificado_dni: str = None
+    modificado: str = None
     created_at: datetime = None
     last_modified: datetime = None
 

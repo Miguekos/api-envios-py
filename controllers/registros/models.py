@@ -34,11 +34,13 @@ class RegistroBase(BaseModel):
 
     @validator('created_at', pre=True, always=True)
     def default_ts_created(cls, v):
+        print("utc_datetime = datetime.datetime.utcnow()", datetime.utcnow())
+        print("utc_datetime = datetime.datetime.utcnow()", datetime.now())
         return v or datetime.now()
 
     @validator('last_modified', pre=True, always=True)
     def default_ts_modified(cls, v, *, values, **kwargs):
-        print(v)
+        #print(v)
         return v or values['created_at']
 
 
@@ -62,7 +64,7 @@ class RegistroOnDB(RegistroBase):
     def default_ts_created(cls, v):
         lima = timezone('America/Lima')
         # print(datetime.now(lima))
-        return v or datetime.now(lima)
+        return v or datetime.now()
 
     @validator('last_modified', pre=True, always=True)
     def default_ts_modified(cls, v, *, values, **kwargs):

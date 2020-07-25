@@ -54,8 +54,8 @@ def formatDate(v):
 def fix_id(resp):
     # print(resp)
     resp["id_"] = str(resp["_id"])
-    resp["created_at"] = formatDate(resp["created_at"])
-    resp["last_modified"] = formatDate(resp["last_modified"])
+    #resp["created_at"] = formatDate(resp["created_at"])
+    #resp["last_modified"] = formatDate(resp["last_modified"])
     return resp
 
 @mantenimiento_router.get("/proveedores", response_model=List[MantenimientoOnDB])
@@ -108,8 +108,8 @@ async def get_registro_by_id(id_: ObjectId = Depends(validate_object_id)):
     registro = await DB.mantenimiento.find_one({"_id": id_})
     if registro:
         registro["id_"] = str(registro["_id"])
-        registro["created_at"] = formatDate(registro["created_at"])
-        registro["last_modified"] = formatDate(registro["last_modified"])
+        #registro["created_at"] = formatDate(registro["created_at"])
+        #registro["last_modified"] = formatDate(registro["last_modified"])
         return registro
     else:
         raise HTTPException(status_code=404, detail="not found")
@@ -133,18 +133,20 @@ async def get_registro_by_filter(id_: int, tipo: str = 1):
         registro = await DB.registros.find_one({"registro": id_})
         if registro:
             registro["id_"] = str(registro["_id"])
-            registro["created_at"] = formatDate(registro["created_at"])
-            registro["last_modified"] = formatDate(registro["last_modified"])
-            registro["responsable_name"] = await nameMobil(registro["responsable"])
+            #registro["created_at"] = formatDate(registro["created_at"])
+            #registro["last_modified"] = formatDate(registro["last_modified"])
+            if registro["responsable"]:
+                registro["responsable_name"] = await nameMobil(registro["responsable"])
             return registro
     elif tipo == "2":
         print("#############################################")
         registro = await DB.registros.find_one({"control": "{}".format(id_)})
         if registro:
             registro["id_"] = str(registro["_id"])
-            registro["created_at"] = formatDate(registro["created_at"])
-            registro["last_modified"] = formatDate(registro["last_modified"])
-            registro["responsable_name"] = await nameMobil(registro["responsable"])
+            #registro["created_at"] = formatDate(registro["created_at"])
+            #registro["last_modified"] = formatDate(registro["last_modified"])
+            if registro["responsable"]:
+                registro["responsable_name"] = await nameMobil(registro["responsable"])
             return registro
     else:
         raise HTTPException(status_code=404, detail="not found")
