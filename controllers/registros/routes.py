@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
 from config.config import DB, CONF
-from .models import RegistroBase, RegistroOnDB
+from .models import RegistroBase, RegistroOnDB, RegistroOnDBQR
 
 registros_router = APIRouter()
 
@@ -80,6 +80,37 @@ async def get_count():
     conteo = await conteo.to_list(length=1)
     print(conteo[0]['registro'])
     return conteo[0]['registro']
+
+
+#asignar paquetes por QR
+@registros_router.put("/addqr/{registro}")
+async def add_asing_qr(registro: int, registro_data: dict):
+    # print("qweqweqwe")
+    print(registro_data)
+    global message
+    try:
+        buscar_registro = DB.registros.find({'registro' : registro})
+        if buscar_registro:
+            buscar_registro = await buscar_registro.to_list(length=1)
+            estado = buscar_registro[0]['estado']
+            print("estado", estado)
+            if estado == "0":
+                registro_data["last_modified"] = datetime.now()
+                #registro_data["registro"] = int(registro_data["registro"])
+                await DB.registros.update_one(
+                    {"registro": registro}, {"$set": registro_data}
+                )
+                print("Paquete asigando correctamente")
+                message = "Paquete asigando correctamente"
+            elif estado == "1":
+                print("Ya fue asignado")
+                message = "Ya fue asignado"
+            else:
+                print("Se encutra entregado o borrado")
+                message = "Se encutra entregado o borrado"
+        return {message}
+    except:
+        return {"No existe este paquete"}
 
 
 @registros_router.get("/", response_model=List[RegistroOnDB])

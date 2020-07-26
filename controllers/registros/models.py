@@ -69,3 +69,29 @@ class RegistroOnDB(RegistroBase):
     @validator('last_modified', pre=True, always=True)
     def default_ts_modified(cls, v, *, values, **kwargs):
         return v or values['created_at']
+
+class RegistroOnDBQR(RegistroBase):
+    """[summary]
+    Actual model used at DB level
+
+    [description]
+    Extends:
+        PetBase
+    Adds `_id` field.
+
+    Variables:
+        _id: str {[ObjectId]} -- [id at DB]
+    """
+    registro : int
+    created_at: datetime = None
+    last_modified: datetime = None
+
+    @validator('created_at', pre=True, always=True)
+    def default_ts_created(cls, v):
+        lima = timezone('America/Lima')
+        # print(datetime.now(lima))
+        return v or datetime.now()
+
+    @validator('last_modified', pre=True, always=True)
+    def default_ts_modified(cls, v, *, values, **kwargs):
+        return v or values['created_at']
