@@ -137,6 +137,8 @@ async def get_registro_by_filter(id_: int, tipo: str = 1):
             #registro["last_modified"] = formatDate(registro["last_modified"])
             if registro["responsable"]:
                 registro["responsable_name"] = await nameMobil(registro["responsable"])
+                registro["created_at"] = formatDate(registro["created_at"])
+                registro["last_modified"] = formatDate(registro["last_modified"])
             return registro
     elif tipo == "2":
         print("#############################################")
@@ -146,6 +148,8 @@ async def get_registro_by_filter(id_: int, tipo: str = 1):
             #registro["created_at"] = formatDate(registro["created_at"])
             #registro["last_modified"] = formatDate(registro["last_modified"])
             if registro["responsable"]:
+                registro["responsable_name"] = await nameMobil(registro["responsable"])
+                registro["created_at"] = formatDate(registro["created_at"])
                 registro["responsable_name"] = await nameMobil(registro["responsable"])
             return registro
     else:

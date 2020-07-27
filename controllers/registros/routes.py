@@ -67,9 +67,9 @@ def fix_id(resp):
      #   print("responsable", resp["responsable"])
       #  resp["responsable_name"] = nameMobil(resp["responsable"])
         #resp["responsable_name"] = nameMobil(resp["responsable"])
-    #resp["created_at"] = formatDate(resp["created_at"])
+    resp["created_at"] = formatDate(resp["created_at"])
     #print("resp", resp)
-    #resp["last_modified"] = formatDate(resp["last_modified"])
+    resp["last_modified"] = formatDate(resp["last_modified"])
     return resp
 
 
