@@ -119,7 +119,7 @@ async def add_asing_qr(registro: int, registro_data: dict):
 
 @registros_router.get("/", response_model=List[RegistroOnDB])
 async def get_all_registros(dni: str = None, estado: str = None, ini_date: str = None, fin_date: str = None,
-                            limit: int = 1000, skip: int = 0):
+                            limit: int = 10000, skip: int = 0):
     """[summary]
     Gets all registros.
 
