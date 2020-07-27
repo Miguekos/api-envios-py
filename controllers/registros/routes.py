@@ -150,9 +150,9 @@ async def get_all_registros(dni: str = None, estado: str = None, ini_date: str =
         print("Sin DNI")
         in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
         out_time_obj = datetime.strptime("{} 23:59:59".format(fin_date), '%d/%m/%Y %H:%M:%S')
-        print("Traer datos de {} hasta {}".format(in_time_obj + timedelta(hours=5), out_time_obj + timedelta(hours=5)))
+        print("Traer datos de {} hasta {}".format(in_time_obj, out_time_obj))
         registro_cursor = DB.registros.find(
-            {'estado': estado, 'created_at': {"$gte": in_time_obj + timedelta(hours=5), "$lt": out_time_obj + timedelta(hours=5)}}).skip(skip).limit(limit)
+            {'estado': estado, 'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
         # print(await registro_cursor.to_list(length=1000))
 
     elif dni and estado and ini_date and fin_date:
@@ -160,7 +160,7 @@ async def get_all_registros(dni: str = None, estado: str = None, ini_date: str =
         in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
         out_time_obj = datetime.strptime("{} 23:59:59".format(fin_date), '%d/%m/%Y %H:%M:%S')
         registro_cursor = DB.registros.find(
-            {"responsable": dni, 'estado': estado, 'created_at': {"$gte": in_time_obj + timedelta(hours=5), "$lt": out_time_obj + timedelta(hours=5)}}).skip(
+            {"responsable": dni, 'estado': estado, 'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(
             skip).limit(limit)
 
     elif dni and estado and ini_date is None and fin_date is None:
