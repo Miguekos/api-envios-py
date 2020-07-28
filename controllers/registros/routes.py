@@ -214,7 +214,7 @@ async def add_registro(registro: RegistroBase):
         registro['registro'] = conteo[0]['registro'] + 1
     except:
         registro['registro'] = 0
-    # print(registro)
+    print("registro", registro)
     registro_op = await DB.registros.insert_one(registro)
     # await DB.registros.update_one(registro.dict())
     # print(registro_op.inserted_id)
