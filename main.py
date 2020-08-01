@@ -6,6 +6,8 @@ from controllers.registros.routes import registros_router
 from controllers.users.routes import user_router
 from controllers.uploadfile.routes import uploadfile_router
 from controllers.mantenimiento.routes import mantenimiento_router
+from controllers.reportes.routes import reporte_router
+
 from config import config
 
 app = FastAPI()
@@ -62,6 +64,13 @@ app.include_router(
     mantenimiento_router,
     prefix="/envios/mantenimiento",
     tags=["mantenimiento"],
+    responses={404: {"description": "Not found"}},
+)
+
+app.include_router(
+    reporte_router,
+    prefix="/envios/reporte",
+    tags=["reporte"],
     responses={404: {"description": "Not found"}},
 )
 
