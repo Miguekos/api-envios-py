@@ -13,17 +13,23 @@ from .models import RegistroBase, RegistroOnDB, RegistroOnDBQR
 registros_router = APIRouter()
 
 
-async def nameMobil(val):
-    try:
-        resp = await DB.users.find_one({"dni": "{}".format(val)})
-        print("###################")
-        print(resp['name'])
-        print("###################")
-        val['responsable_name'] = resp['name']
-        val["id_"] = str(val["_id"])
-        return val
-    except:
-        print("Ya tenia")
+async def nameMobil(resp):
+    resp = await DB.users.find_one({"dni": "{}".format(resp)})
+    return resp['name']
+
+
+#
+# async def nameMobil(val):
+#     try:
+#         resp = await DB.users.find_one({"dni": "{}".format(val)})
+#         print("###################")
+#         print(resp['name'])
+#         print("###################")
+#         val['responsable_name'] = resp['name']
+#         val["id_"] = str(val["_id"])
+#         return val
+#     except:
+#         print("Ya tenia")
 
 
 def validate_object_id(id_: str):
@@ -117,6 +123,28 @@ async def add_asing_qr(registro: int, registro_data: dict):
         return {"No existe este paquete"}
 
 
+@registros_router.get("/repair")
+async def reparar():
+    """[summary]
+    Gets all registros.
+
+    [description]
+    Endpoint to retrieve registros.
+    """
+
+    # registro_cursor = DB.registros.find({'created_at' : {"$gte": from_date, "$lt": to_date}}).skip(skip).limit(limit)
+    registro_cursor = DB.registros.find()
+    for docs in await registro_cursor.to_list(None):
+        if docs['responsable'] != None and docs['responsable'] != "":
+            print(docs['responsable'])
+            print(docs['_id'])
+            print(docs['registro'])
+            registro_op = await DB.registros.update_one(
+                {"_id": ObjectId(docs['_id'])}, {"$set": {"responsable_name": await nameMobil(docs['responsable'])}}
+            )
+    return {"completado": "completado"}
+
+
 @registros_router.get("/", response_model=List[RegistroOnDB])
 async def get_all_registros(dni: str = None, estado: str = None, ini_date: str = None, fin_date: str = None,
                             limit: int = 10000, skip: int = 0):
@@ -174,11 +202,13 @@ async def get_all_registros(dni: str = None, estado: str = None, ini_date: str =
         out_time_obj = formatDate(out_time_obj) + timedelta(hours=5)
         if estado == "0":
             registro_cursor = DB.registros.find(
-                {"responsable": dni, 'estado': estado, 'last_modified': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(
+                {"responsable": dni, 'estado': estado,
+                 'last_modified': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(
                 skip).limit(limit)
         if estado != "0":
             registro_cursor = DB.registros.find(
-                {"responsable": dni, 'estado': estado, 'last_modified': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(
+                {"responsable": dni, 'estado': estado,
+                 'last_modified': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(
                 skip).limit(limit)
 
     elif dni and estado and ini_date is None and fin_date is None:

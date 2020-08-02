@@ -8,17 +8,13 @@ from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
 from config.config import DB, CONF
-from .models import ReporteBase, ReporteOnDB, ReporteFilter
+from .models import ReporteBase, ReporteOnDB, ReporteFilter, ReporteHistorico
 
 reporte_router = APIRouter()
 
 
 async def nameMobil(resp):
-    # print("###################", resp)
     resp = await DB.users.find_one({"dni": "{}".format(resp)})
-    # print("###################")
-    # print(resp['name'])
-    # print("###################")
     return resp['name']
 
 
@@ -48,18 +44,15 @@ def formatDate(v):
     fehcaEvaluar = v.astimezone(lima)
     return fehcaEvaluar
 
+def fix_id_historico(resp):
+    resp["id_"] = str(resp["_id"])
+    resp.pop('_id')
+    return resp
+
 
 def fix_id(resp):
     resp["id_"] = str(resp["_id"])
-    # try:
-    #    asd = resp["responsable_name"]
-    #   print("ya tiene",asd)
-    # except:
-    #   print("responsable", resp["responsable"])
-    #  resp["responsable_name"] = nameMobil(resp["responsable"])
-    # resp["responsable_name"] = nameMobil(resp["responsable"])
     resp["created_at"] = formatDate(resp["created_at"])
-    # print("resp", resp)
     resp["last_modified"] = formatDate(resp["last_modified"])
     return resp
 
@@ -94,7 +87,11 @@ async def get_reporte_tipodepagos(ini_date: str = None, fin_date: str = None):
         # responsables.append(nameMobil(docs['responsable']))
         if docs['responsable'] != None and docs['responsable'] != "":
             # print("docs['responsable']", await nameMobil(docs['responsable']))
-            responsables.append(await nameMobil(docs['responsable']))
+            # responsables.append(await nameMobil(docs['responsable']))
+            responsables.append(docs['responsable_name'])
+        else:
+            print(docs['_id'])
+            print(docs['responsable'])
         comunas.append(docs['comuna'])
         proveedores.append(docs['proveedores'])
         if docs['tipodepago'] == 'Pagado':
@@ -104,12 +101,25 @@ async def get_reporte_tipodepagos(ini_date: str = None, fin_date: str = None):
         if docs['tipodepago'] == 'Cuenta Corriente':
             total_credito.append(docs['tipodepago'])
     # return list(map(fix_id, await registro_cursor.to_list(length=10)))
-    comunas = dict(Counter(comunas))
-    proveedores = dict(Counter(proveedores))
-    responsables = dict(Counter(responsables))
-    keys_comunas, values_comunas = zip(*comunas.items())
-    keys_proveedores, values_proveedores = zip(*proveedores.items())
-    keys_responsables, values_responsables = zip(*responsables.items())
+    # try:
+    global keys_comunas, keys_proveedores, keys_responsables, values_comunas, values_proveedores, values_responsables
+    keys_comunas = []
+    keys_proveedores = []
+    keys_responsables = []
+    values_comunas = []
+    values_proveedores = []
+    values_responsables = []
+    if len(comunas) > 0:
+        comunas = dict(Counter(comunas))
+        keys_comunas, values_comunas = zip(*comunas.items())
+
+    if len(proveedores) > 0:
+        proveedores = dict(Counter(proveedores))
+        keys_proveedores, values_proveedores = zip(*proveedores.items())
+
+    if len(responsables) > 0:
+        responsables = dict(Counter(responsables))
+        keys_responsables, values_responsables = zip(*responsables.items())
     # printing keys and values separately
     return {
         "total_registro": len(total),
@@ -123,6 +133,102 @@ async def get_reporte_tipodepagos(ini_date: str = None, fin_date: str = None):
         "responsablesKeys": keys_responsables,
         "responsablesValue": values_responsables
     }
+    # except:
+    #     return {
+    #         "total_registro": len(total),
+    #         "total_pagado": len(total_pagado),
+    #         "total_por_pagado": len(total_por_pagado),
+    #         "total_credito": len(total_credito),
+    #         "comunasKeys": keys_comunas,
+    #         "comunasValue": values_comunas,
+    #         "proveedoresKeys": keys_proveedores,
+    #         "proveedoresValue": values_proveedores,
+    #         "responsablesKeys": keys_responsables,
+    #         "responsablesValue": values_responsables
+    #     }
+
+
+@reporte_router.get("/historico")
+async def get_reporte_tipodepagos(ini_date: str = None):
+    """[summary]
+    Obtener reportes.
+
+    [description]
+    Reportes por fechas.
+    """
+    # pd.DataFrame(MyList, columns=["x"]).groupby('x').size().to_dict()
+    if ini_date is None:
+        buscar = DB.historico.find({})
+        # buscar = DB.historico.find({}, {'_id': 0})
+        # return await buscar.to_list(None)
+        # users = await buscar.to_list(None)
+        # global total_pagado, total_por_pagado, total_credito, total, fecha
+        total_pagado_h = []
+        total_por_pagado_h = []
+        total_registro_h = []
+        fecha_h = []
+        for docs in await buscar.to_list(None):
+            total_pagado_h.append(docs['total_pagado'])
+            total_por_pagado_h.append(docs['total_por_pagado'])
+            total_registro_h.append(docs['total_registro'])
+            fecha_h.append(docs['created_format'])
+
+            # print(users)
+            # return list(map(fix_id_historico, users))
+        return {
+            "total_pagado": total_pagado_h,
+            "total_por_pagado": total_por_pagado_h,
+            "total_registro": total_registro_h,
+            "fecha": fecha_h
+        }
+    else:
+        global total_pagado, total_por_pagado, total_credito, comunas, proveedores, responsables, total
+        total = []
+        responsables = []
+        proveedores = []
+        comunas = []
+        total_pagado = []
+        total_por_pagado = []
+        total_credito = []
+        in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
+        in_time_obj = formatDate(in_time_obj) + timedelta(hours=5)
+        out_time_obj = datetime.strptime("{} 23:59:59".format(ini_date), '%d/%m/%Y %H:%M:%S')
+        out_time_obj = formatDate(out_time_obj) + timedelta(hours=5)
+        print("Traer datos de {} hasta {}".format(in_time_obj, out_time_obj))
+        registro_cursor = DB.registros.find({'last_modified': {"$gte": in_time_obj, "$lt": out_time_obj}})
+        # registro_cursor = DB.registros.find()
+        for docs in await registro_cursor.to_list(None):
+            total.append("docs")
+            if docs['tipodepago'] == 'Pagado':
+                total_pagado.append(docs['tipodepago'])
+            if docs['tipodepago'] == 'Por pagar':
+                total_por_pagado.append(docs['tipodepago'])
+            if docs['tipodepago'] == 'Cuenta Corriente':
+                total_credito.append(docs['tipodepago'])
+        jsonEnviar = {
+            "total_registro": len(total),
+            "total_pagado": len(total_pagado),
+            "total_por_pagado": len(total_por_pagado),
+            "total_credito": len(total_credito),
+            "fecha": str(ini_date),
+            "created_at": in_time_obj,
+            "created_format": in_time_obj.strftime("%b %d")
+        }
+        # print(type(jsonEnviar))
+        # print(jsonEnviar)
+        buscar = await DB.historico.find_one({"fecha": ini_date})
+        if buscar is None:
+            guardar = await DB.historico.insert_one(jsonEnviar)
+            return {
+                "result": "Se inserto"
+            }
+        else:
+            registro_op = await DB.reporte.update_one(
+                {"fecha": ini_date}, {"$set": jsonEnviar}
+            )
+            return {
+                "result": "Se actualizo"
+            }
 
 
 # @reporte_router.post("/", response_model=ReporteOnDB)

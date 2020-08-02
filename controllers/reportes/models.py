@@ -6,6 +6,7 @@ from pydantic import BaseModel, validator
 from datetime import date
 from typing import List, Optional
 
+
 class ReporteBase(BaseModel):
     """[summary]
         Base pet abstraction model.
@@ -43,7 +44,7 @@ class ReporteOnDB(ReporteBase):
     Variables:
         _id: str {[ObjectId]} -- [id at DB]
     """
-    id_ : str
+    id_: str
     created_at: datetime = None
     last_modified: datetime = None
 
@@ -58,6 +59,21 @@ class ReporteOnDB(ReporteBase):
         return v or values['created_at']
 
 
+class ReporteHistorico(ReporteBase):
+    """[summary]
+       Actual model used at DB level
+
+       [description]
+       Extends:
+           PetBase
+       Adds `_id` field.
+
+       Variables:
+           _id: str {[ObjectId]} -- [id at DB]
+       """
+    id_: str
+
+
 class ReporteFilter(ReporteBase):
     """[summary]
     Actual model used at DB level
@@ -70,7 +86,7 @@ class ReporteFilter(ReporteBase):
     Variables:
         _id: str {[ObjectId]} -- [id at DB]
     """
-    id_ : str
+    id_: str
     name: str
     lastname: str
     comuna: str
