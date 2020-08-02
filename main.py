@@ -22,7 +22,7 @@ origins = [
     "http://192.168.0.32:8080",
     "http://192.168.0.10:8080",
     "http://95.111.235.214:9776",
-    "https://envios.apps.com.pe/"
+    "https://enviosdev.apps.com.pe/"
 ]
 
 app.add_middleware(
@@ -34,42 +34,42 @@ app.add_middleware(
 )
 app.include_router(
     pets_router,
-    prefix="/envios/pets",
+    prefix="/enviosdev/pets",
     tags=["pets"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     registros_router,
-    prefix="/envios/registros",
+    prefix="/enviosdev/registros",
     tags=["registros"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     user_router,
-    prefix="/envios/users",
+    prefix="/enviosdev/users",
     tags=["users"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     uploadfile_router,
-    prefix="/envios/uploads",
+    prefix="/enviosdev/uploads",
     tags=["upload"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     mantenimiento_router,
-    prefix="/envios/mantenimiento",
+    prefix="/enviosdev/mantenimiento",
     tags=["mantenimiento"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     reporte_router,
-    prefix="/envios/reporte",
+    prefix="/enviosdev/reporte",
     tags=["reporte"],
     responses={404: {"description": "Not found"}},
 )
