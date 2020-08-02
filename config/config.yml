@@ -5,10 +5,10 @@ databases:
   default:
     ENGINE: 'mongodb'
     DRIVER: 'motor'
-    NAME: 'tuenvioexpress'
+    NAME: 'envios_dev'
     USER: ''
     PASSWORD: ''
     HOST: '95.111.235.214'
     PORT: 32773
-    #HOST: '127.0.0.1'
-    #PORT: 27017
+#    HOST: '127.0.0.1'
+#    PORT: 27017

@@ -22,7 +22,7 @@ origins = [
     "http://192.168.0.32:8080",
     "http://192.168.0.10:8080",
     "http://95.111.235.214:9776",
-    "https://tuenvioexpress.apps.com.pe/"
+    "https://envios.apps.com.pe/"
 ]
 
 app.add_middleware(
