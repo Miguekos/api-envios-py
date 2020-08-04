@@ -4,6 +4,8 @@ from collections import Counter
 from datetime import datetime, timedelta
 from typing import List
 
+import pytz
+
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -43,6 +45,7 @@ def formatDate(v):
     v = v.replace(tzinfo=pytz.UTC)
     fehcaEvaluar = v.astimezone(lima)
     return fehcaEvaluar
+
 
 def fix_id_historico(resp):
     resp["id_"] = str(resp["_id"])
@@ -199,33 +202,41 @@ async def get_reporte_tipodepagos(ini_date: str = None):
         # registro_cursor = DB.registros.find()
         for docs in await registro_cursor.to_list(None):
             total.append("docs")
+            print(docs)
             if docs['tipodepago'] == 'Pagado':
                 total_pagado.append(docs['tipodepago'])
             if docs['tipodepago'] == 'Por pagar':
                 total_por_pagado.append(docs['tipodepago'])
             if docs['tipodepago'] == 'Cuenta Corriente':
                 total_credito.append(docs['tipodepago'])
+        print(total_pagado)
+        print(total_por_pagado)
+        print(total_credito)
+        lima = pytz.timezone('America/Lima')
         jsonEnviar = {
             "total_registro": len(total),
             "total_pagado": len(total_pagado),
             "total_por_pagado": len(total_por_pagado),
             "total_credito": len(total_credito),
             "fecha": str(ini_date),
-            "created_at": in_time_obj,
+            "created_at": datetime.now(lima),
             "created_format": in_time_obj.strftime("%b %d")
         }
         # print(type(jsonEnviar))
-        # print(jsonEnviar)
+        print(jsonEnviar)
         buscar = await DB.historico.find_one({"fecha": ini_date})
         if buscar is None:
             guardar = await DB.historico.insert_one(jsonEnviar)
+            print("Se inserto")
             return {
                 "result": "Se inserto"
             }
         else:
-            registro_op = await DB.reporte.update_one(
+            registro_op = await DB.historico.update_one(
                 {"fecha": ini_date}, {"$set": jsonEnviar}
             )
+            print(registro_op.modified_count)
+            print("Se actualizo")
             return {
                 "result": "Se actualizo"
             }

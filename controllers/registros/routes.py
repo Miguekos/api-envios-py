@@ -10,6 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from config.config import DB, CONF
 from .models import RegistroBase, RegistroOnDB, RegistroOnDBQR
 
+import pytz
+
 registros_router = APIRouter()
 
 
@@ -52,7 +54,6 @@ async def _get_or_404(id_: str):
 
 
 def formatDate(v):
-    import pytz
     lima = pytz.timezone('America/Lima')
     fehcaEvaluarTest = v
     # print("fehcaEvaluarTest", fehcaEvaluarTest)
@@ -321,7 +322,8 @@ async def update_registro(id_: str, registro_data: dict):
     [description]
     Endpoint to update an specific registro with some or all fields.
     """
-    registro_data["last_modified"] = datetime.now()
+    lima = pytz.timezone('America/Lima')
+    registro_data["last_modified"] = datetime.now(lima)
     registro_op = await DB.registros.update_one(
         {"_id": ObjectId(id_)}, {"$set": registro_data}
     )
