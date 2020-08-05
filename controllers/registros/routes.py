@@ -106,7 +106,8 @@ async def add_asing_qr(registro: int, registro_data: dict):
             estado = buscar_registro[0]['estado']
             print("estado", estado)
             if estado == "0":
-                registro_data["last_modified"] = datetime.now()
+                lima = pytz.timezone('America/Lima')
+                registro_data["last_modified"] = datetime.now(lima)
                 # registro_data["registro"] = int(registro_data["registro"])
                 await DB.registros.update_one(
                     {"registro": registro}, {"$set": registro_data}

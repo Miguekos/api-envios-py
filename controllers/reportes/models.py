@@ -24,7 +24,9 @@ class ReporteBase(BaseModel):
 
     @validator('created_at', pre=True, always=True)
     def default_ts_created(cls, v):
-        return v or datetime.now()
+        import pytz
+        lima = pytz.timezone('America/Lima')
+        return v or datetime.now(lima)
 
     @validator('last_modified', pre=True, always=True)
     def default_ts_modified(cls, v, *, values, **kwargs):
