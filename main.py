@@ -7,6 +7,8 @@ from controllers.users.routes import user_router
 from controllers.uploadfile.routes import uploadfile_router
 from controllers.mantenimiento.routes import mantenimiento_router
 from controllers.reportes.routes import reporte_router
+from controllers.proveedor.routes import proveedor_router
+
 
 from config import config
 
@@ -71,6 +73,13 @@ app.include_router(
     reporte_router,
     prefix="/envios/reporte",
     tags=["reporte"],
+    responses={404: {"description": "Not found"}},
+)
+
+app.include_router(
+    proveedor_router,
+    prefix="/envios/proveedor",
+    tags=["proveedor"],
     responses={404: {"description": "Not found"}},
 )
 

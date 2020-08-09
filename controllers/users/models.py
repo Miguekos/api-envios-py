@@ -16,6 +16,7 @@ class UserRol(str, Enum):
     """
     admin = "1"
     user = "2"
+    prove = "3"
 
 class UserLogin(BaseModel):
     email : str
@@ -28,6 +29,7 @@ class UserIn(BaseModel):
     dni: str
     password: str
     email: str
+    proveedor: str = None
     rol: UserRol = "1"
     codRes: str = "00"
     created_at: datetime = None
@@ -54,6 +56,7 @@ class UserOut(BaseModel):
     phone: str
     dni: str
     email: str
+    proveedor: str = None
     rol: UserRol = "1"
     created_at: datetime = None
     last_modified: datetime = None
@@ -80,6 +83,7 @@ class UserBase(BaseModel):
     dni: str
     email: str
     rol: UserRol = 2
+    proveedor: str = None
     created_at: datetime = None
     last_modified: datetime = None
 
