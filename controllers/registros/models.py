@@ -4,7 +4,7 @@ from pytz import timezone
 from enum import Enum
 from pydantic import BaseModel, validator
 from datetime import date
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 class RegistroBase(BaseModel):
     """[summary]
@@ -29,6 +29,10 @@ class RegistroBase(BaseModel):
     estado: str = "0"
     user_registrante: str = None
     responsable: str = None
+    latRecojo: Optional[Dict] = None
+    lngRecojo: Optional[Dict] = None
+    latEntrega: Optional[Dict] = None
+    lngEntrega: Optional[Dict] = None
     created_at: datetime = None
     last_modified: datetime = None
 
