@@ -1,8 +1,13 @@
 # backend/tancho/pets/routes.py
-
+import shutil
+import os
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from typing import Callable
 from bson.objectid import ObjectId
 from config.config import DB, CONF
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi.responses import HTMLResponse
 from typing import List
 import logging
 
@@ -35,90 +40,54 @@ def fix_pet_id(pet):
     pet["id_"] = str(pet["_id"])
     return pet
 
+@uploadfile_router.post("/files/")
+async def create_files(files: List[bytes] = File(...)):
+    print(files)
+    global upload_folder
+    upload_folder = 'files'
+    file_object = files
+    # create empty file to copy the file_object to
+    upload_folder = open(os.path.join(upload_folder, "nuevo.jpg"), 'wb+')
+    shutil.copyfileobj(file_object, upload_folder)
+    upload_folder.close()
+    return {"filename": "nuevo.jpg"}
+    # return {"file_sizes": [len(file) for file in files]}
 
-@uploadfile_router.get("/", response_model=List[UserOnDB])
-async def get_all_pets(rol: UserRol = None, limit: int = 10, skip: int = 0):
-    """[summary]
-    Gets all pets.
+@uploadfile_router.post("/upload")
+def create_file(file: UploadFile = File(...)):
+    global upload_folder
+    upload_folder = 'files'
+    file_object = file.file
+    #create empty file to copy the file_object to
+    upload_folder = open(os.path.join(upload_folder, file.filename), 'wb+')
+    shutil.copyfileobj(file_object, upload_folder)
+    upload_folder.close()
+    return {"filename": file.filename}
 
-    [description]
-    Endpoint to retrieve pets.
+@uploadfile_router.post("/uploadfiles/")
+async def create_upload_files(files: List[UploadFile] = File(...)):
+    print(files[0].file)
+    global upload_folder
+    upload_folder = 'fileserver'
+    file_object = files[0].file
+    upload_folder = open(os.path.join(upload_folder, files[0].filename), 'wb+')
+    shutil.copyfileobj(file_object, upload_folder)
+    upload_folder.close()
+    return {"filenames": [file.filename for file in files]}
+
+
+@uploadfile_router.get("/")
+async def main():
+    content = """
+<body>
+<form action="/envios/uploads/files/" enctype="multipart/form-data" method="post">
+<input name="files" type="file" multiple>
+<input type="submit">
+</form>
+<form action="/envios/uploads/uploadfiles/" enctype="multipart/form-data" method="post">
+<input name="files" type="file" multiple>
+<input type="submit">
+</form>
+</body>
     """
-    if rol is None:
-        pets_cursor = DB.users.find().skip(skip).limit(limit)
-    else:
-        pets_cursor = DB.users.find({"rol": rol.value}).skip(skip).limit(limit)
-    pets = await pets_cursor.to_list(length=limit)
-    return list(map(fix_pet_id, pets))
-
-
-@uploadfile_router.post("/", response_model=UserOnDB)
-async def add_pet(*, user: UserBase, message: MsgBase):
-    """[summary]
-    Inserts a new pet on the DB.
-
-    [description]
-    Endpoint to add a new pet.
-    """
-    print(message)
-    user_op = await DB.users.insert_one(user.dict())
-    if user_op.inserted_id:
-        user = await _get_user_or_404(user_op.inserted_id)
-        user["id_"] = str(user["_id"])
-        return user
-
-#
-# @uploadfile_router.get(
-#     "/{id_}",
-#     response_model=PetOnDB
-# )
-# async def get_pet_by_id(id_: ObjectId = Depends(validate_object_id)):
-#     """[summary]
-#     Get one pet by ID.
-#
-#     [UserOnDBn]
-#     Endpoint to retrieve an specific pet.
-#     """
-#     pet = await DB.users.find_one({"_id": id_})
-#     if pet:
-#         pet["id_"] = str(pet["_id"])
-#         return pet
-#     else:
-#         raise HTTPException(status_code=404, detail="Pet not found")
-#
-#
-# @uploadfile_router.delete(
-#     "/{id_}",
-#     dependencies=[Depends(_get_user_or_404)],
-#     response_model=dict
-# )
-# async def delete_pet_by_id(id_: str):
-#     """[summary]
-#     Get one pet by ID.
-#
-#     [description]
-#     Endpoint to retrieve an specific pet.
-#     """
-#     pet_op = await DB.users.delete_one({"_id": ObjectId(id_)})
-#     if pet_op.deleted_count:
-#         return {"status": f"deleted count: {pet_op.deleted_count}"}
-#
-# @uploadfile_router.put(
-#     "/{id_}",
-#     dependencies=[Depends(validate_object_id), Depends(_get_user_or_404)],
-#     response_model=PetOnDB
-# )
-# async def update_pet(id_: str, pet_data: PetBase):
-#     """[summary]
-#     Update a pet by ID.
-#
-#     [description]
-#     Endpoint to update an specific pet with some or all fields.
-#     """
-#     pet_op = await DB.users.update_one(
-#         {"_id": ObjectId(id_)}, {"$set": pet_data.dict()}
-#     )
-#     if pet_op.modified_count:
-#         return await _get_user_or_404(UserOnDB_)
-#     else:
-#         raise HTTPException(status_code=UserOnDB)
+    return HTMLResponse(content=content)
