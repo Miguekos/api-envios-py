@@ -10,9 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse
 from typing import List
 import logging
+from fastapi.responses import FileResponse
 
 from .models import UserOnDB, UserRol, UserBase, MsgBase
-
 
 uploadfile_router = APIRouter()
 
@@ -40,6 +40,13 @@ def fix_pet_id(pet):
     pet["id_"] = str(pet["_id"])
     return pet
 
+
+@uploadfile_router.get("/getfile/{filename}")
+async def main(filename):
+    return FileResponse("fileserver/{}".format(filename))
+    # return FileResponse("hola.jpg")
+
+
 @uploadfile_router.post("/files/")
 async def create_files(files: List[bytes] = File(...)):
     print(files)
@@ -53,16 +60,18 @@ async def create_files(files: List[bytes] = File(...)):
     return {"filename": "nuevo.jpg"}
     # return {"file_sizes": [len(file) for file in files]}
 
+
 @uploadfile_router.post("/upload")
 def create_file(file: UploadFile = File(...)):
     global upload_folder
     upload_folder = 'files'
     file_object = file.file
-    #create empty file to copy the file_object to
+    # create empty file to copy the file_object to
     upload_folder = open(os.path.join(upload_folder, file.filename), 'wb+')
     shutil.copyfileobj(file_object, upload_folder)
     upload_folder.close()
     return {"filename": file.filename}
+
 
 @uploadfile_router.post("/uploadfiles/")
 async def create_upload_files(files: List[UploadFile] = File(...)):

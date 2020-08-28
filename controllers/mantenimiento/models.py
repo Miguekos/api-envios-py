@@ -89,6 +89,8 @@ class MantenimientoFilter(MantenimientoBase):
     responsable_name: str = None
     modificado_dni: str = None
     modificado: str = None
+    sustento: str = None
+    comentario: str = None
     created_at: datetime = None
     last_modified: datetime = None
 
