@@ -15,6 +15,8 @@ from config import config
 app = FastAPI()
 
 origins = [
+    "http://192.168.56.1:8080",
+    "http://192.168.56.1:8080",
     "http://localhost.tiangolo.com",
     "https://localhost.tiangolo.com",
     "http://localhost",
@@ -22,6 +24,7 @@ origins = [
     "http://localhost:8000",
     "http://192.168.0.34:8080",
     "http://192.168.0.30:8080",
+    "http://192.168.0.31:8080",
     "http://192.168.0.32:8080",
     "http://192.168.0.10:8080",
     "http://95.111.235.214:9776",

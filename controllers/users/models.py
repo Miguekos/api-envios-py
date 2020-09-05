@@ -30,6 +30,7 @@ class UserIn(BaseModel):
     password: str
     email: str
     proveedor: str = None
+    nameproveedor: str = None
     rol: UserRol = "1"
     codRes: str = "00"
     created_at: datetime = None
@@ -57,6 +58,7 @@ class UserOut(BaseModel):
     dni: str
     email: str
     proveedor: str = None
+    nameproveedor: str = None
     rol: UserRol = "1"
     created_at: datetime = None
     last_modified: datetime = None
@@ -84,6 +86,7 @@ class UserBase(BaseModel):
     email: str
     rol: UserRol = 2
     proveedor: str = None
+    nameproveedor: str = None
     created_at: datetime = None
     last_modified: datetime = None
 

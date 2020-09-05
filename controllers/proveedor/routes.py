@@ -59,6 +59,121 @@ def fix_id(resp):
     resp["last_modified"] = formatDate(resp["last_modified"])
     return resp
 
+
+@proveedor_router.get("/find/{idprovee}/{idregistro}")
+async def get_proveedor(idprovee: int = None, idregistro: int = None):
+    """[summary]
+    Obtener proveedors.
+
+    [description]
+    Reportes por fechas.
+    """
+    print("idprovee", idprovee)
+    print("idregistro", idregistro)
+    try:
+        findProvee = await DB.mantenimiento.find_one({'registro' : idprovee})
+        print(findProvee['name'])
+        global total
+        total = []
+
+        # buscar = DB.historico.find({})
+        # pd.DataFrame(MyList, columns=["x"]).groupby('x').size().to_dict()
+        registro_cursor = DB.registros.find({'proveedores' : '{}'.format(findProvee['name']), 'registro' : idregistro})
+        # print("registro_cursor",await registro_cursor)
+        # registro_cursor = DB.registros.find()
+        return list(map(fix_id_provee, await registro_cursor.to_list(None)))
+    except:
+        # print(ValueError)
+        raise HTTPException(status_code=500, detail="Error controlado")
+    # for docs in await registro_cursor.to_list(None):
+    #     total.append(fix_id_provee(docs))
+    #     # print(nameMobil(docs['responsable']))
+    #     # responsables.append(nameMobil(docs['responsable']))
+    # print(total)
+    # return { list(total) }
+    # except:
+    #     return {
+    #         "total_registro": len(total),
+    #         "total_pagado": len(total_pagado),
+    #         "total_por_pagado": len(total_por_pagado),
+    #         "total_credito": len(total_credito),
+    #         "comunasKeys": keys_comunas,
+    #         "comunasValue": values_comunas,
+    #         "proveedoresKeys": keys_proveedores,
+    #         "proveedoresValue": values_proveedores,
+    #         "responsablesKeys": keys_responsables,
+    #         "responsablesValue": values_responsables
+    #     }
+
+@proveedor_router.get("/all/{idprovee}")
+async def get_proveedor(idprovee: int = None):
+    """[summary]
+    Obtener proveedors.
+
+    [description]
+    Reportes por fechas.
+    """
+    print("idprovee", idprovee)
+    try:
+        findProvee = await DB.mantenimiento.find_one({'registro' : idprovee})
+        print(findProvee['name'])
+        global total
+        total = []
+
+        # buscar = DB.historico.find({})
+        # pd.DataFrame(MyList, columns=["x"]).groupby('x').size().to_dict()
+        registro_cursor = DB.registros.find({'proveedores' : '{}'.format(findProvee['name'])})
+        bodega = []
+        asignados = []
+        entregados = []
+
+        for docs in await registro_cursor.to_list(None):
+            print(docs['estado'])
+            total.append(docs)
+            if docs['estado'] == "0":
+                bodega.append(docs['estado'])
+
+            if docs['estado'] == "1":
+                asignados.append(docs['estado'])
+
+            if docs['estado'] == "2":
+                entregados.append(docs['estado'])
+
+            # print(users)
+            # return list(map(fix_id_provee, users))
+        return {
+            "total_bodega": len(bodega),
+            "total_asignados": len(asignados),
+            "total_entregados": len(entregados),
+            "total" : len(total)
+        }
+        # print("registro_cursor",await registro_cursor)
+        # registro_cursor = DB.registros.find()
+        # return list(map(fix_id_provee, await registro_cursor.to_list(None)))
+    except:
+        # print(ValueError)
+        raise HTTPException(status_code=500, detail="Error controlado")
+    # for docs in await registro_cursor.to_list(None):
+    #     total.append(fix_id_provee(docs))
+    #     # print(nameMobil(docs['responsable']))
+    #     # responsables.append(nameMobil(docs['responsable']))
+    # print(total)
+    # return { list(total) }
+    # except:
+    #     return {
+    #         "total_registro": len(total),
+    #         "total_pagado": len(total_pagado),
+    #         "total_por_pagado": len(total_por_pagado),
+    #         "total_credito": len(total_credito),
+    #         "comunasKeys": keys_comunas,
+    #         "comunasValue": values_comunas,
+    #         "proveedoresKeys": keys_proveedores,
+    #         "proveedoresValue": values_proveedores,
+    #         "responsablesKeys": keys_responsables,
+    #         "responsablesValue": values_responsables
+    #     }
+
+
 @proveedor_router.get("/")
 async def get_proveedor(ini_date: str = None, fin_date: str = None, provee: int = None, estado : str = None):
     """[summary]
