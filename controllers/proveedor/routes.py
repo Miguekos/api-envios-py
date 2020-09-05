@@ -59,7 +59,6 @@ def fix_id(resp):
     resp["last_modified"] = formatDate(resp["last_modified"])
     return resp
 
-
 @proveedor_router.get("/find/{idprovee}/{idregistro}")
 async def get_proveedor(idprovee: int = None, idregistro: int = None):
     """[summary]
@@ -85,25 +84,7 @@ async def get_proveedor(idprovee: int = None, idregistro: int = None):
     except:
         # print(ValueError)
         raise HTTPException(status_code=500, detail="Error controlado")
-    # for docs in await registro_cursor.to_list(None):
-    #     total.append(fix_id_provee(docs))
-    #     # print(nameMobil(docs['responsable']))
-    #     # responsables.append(nameMobil(docs['responsable']))
-    # print(total)
-    # return { list(total) }
-    # except:
-    #     return {
-    #         "total_registro": len(total),
-    #         "total_pagado": len(total_pagado),
-    #         "total_por_pagado": len(total_por_pagado),
-    #         "total_credito": len(total_credito),
-    #         "comunasKeys": keys_comunas,
-    #         "comunasValue": values_comunas,
-    #         "proveedoresKeys": keys_proveedores,
-    #         "proveedoresValue": values_proveedores,
-    #         "responsablesKeys": keys_responsables,
-    #         "responsablesValue": values_responsables
-    #     }
+
 
 @proveedor_router.get("/all/{idprovee}")
 async def get_proveedor(idprovee: int = None):
