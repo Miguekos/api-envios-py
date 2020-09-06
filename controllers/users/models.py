@@ -51,6 +51,34 @@ class UserIn(BaseModel):
         contr = pwd_context.hash(v)
         return contr
 
+class UserInUpdate(BaseModel):
+    name: str
+    phone: str
+    dni: str
+    password: str
+    email: str
+    proveedor: str = None
+    nameproveedor: str = None
+    rol: UserRol = "1"
+    codRes: str = "00"
+    created_at: datetime = None
+    last_modified: datetime = None
+
+    @validator('created_at', pre=True, always=True)
+    def default_ts_created(cls, v):
+        lima = timezone('America/Lima')
+        print(datetime.now(lima))
+        return v or datetime.now(lima)
+
+    @validator('last_modified', pre=True, always=True)
+    def default_ts_modified(cls, v, *, values, **kwargs):
+        return v or values['created_at']
+
+    @validator('password', pre=True, always=True)
+    def get_password_hash(cls, v):
+        contr = pwd_context.hash(v)
+        return contr
+
 class UserOut(BaseModel):
     username: str
     name: str
@@ -81,7 +109,7 @@ class UserBase(BaseModel):
         BaseModel {[type]} -- [description]
     """
     name: str
-    phone: int
+    phone: str
     dni: str
     email: str
     rol: UserRol = 2

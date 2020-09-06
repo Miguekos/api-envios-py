@@ -177,22 +177,31 @@ async def delete_user_by_id(id_: str):
         return {"status": f"deleted count: {user_op.deleted_count}"}
 
 @user_router.put(
-    "/{id_}",
-    dependencies=[Depends(validate_object_id), Depends(_get_or_404)],
+    "/",
     response_model=UserOnDB
 )
-async def update_user(id_: str, user_data: dict):
+async def update_user(user_data: dict):
     """[summary]
     Update a user by ID.
 
     [description]
     Endpoint to update an specific user with some or all fields.
     """
-    print(user_data)
-    user_op = await DB.users.update_one(
-        {"_id": ObjectId(id_)}, {"$set": user_data}
-    )
+    print(user_data['password'])
+    if user_data['password'] == "":
+        user_data.pop('password')
+        print(user_data)
+        print("no envio nada")
+        user_op = await DB.users.update_one(
+            {"_id": ObjectId(user_data['id_'])}, {"$set": user_data}
+        )
+    else:
+        print("pass enviado:", user_data['password'])
+        user_data['password'] = get_password_hash(user_data['password'])
+        user_op = await DB.users.update_one(
+            {"_id": ObjectId(user_data['id_'])}, {"$set": user_data}
+        )
     if user_op.modified_count:
-        return await _get_or_404(id_)
+        return await _get_or_404(user_data['id_'])
     else:
         raise HTTPException(status_code=304)
