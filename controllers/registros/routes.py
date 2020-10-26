@@ -94,6 +94,8 @@ async def get_count():
 
 
 
+
+
 @registros_router.get("/findMobil/{dnimobil}")
 async def get_proveedor(dnimobil: int = None):
     """[summary]
@@ -213,6 +215,35 @@ async def reparar():
                 {"_id": ObjectId(docs['_id'])}, {"$set": {"responsable_name": await nameMobil(docs['responsable'])}}
             )
     return {"completado": "completado"}
+
+
+@registros_router.get("/buscar", response_model=List[RegistroOnDB])
+async def get_all_registros(ini_date: str = None, fin_date: str = None,
+                            limit: int = 0, skip: int = 0):
+    """[summary]
+    Gets all registros.
+
+    [description]
+    Endpoint to retrieve registros.
+    """
+
+    print("ini_date", ini_date)
+    print("fin_date", fin_date)
+    global registro_cursor
+    if ini_date == "null":
+        ini_date = None
+    if fin_date == "null":
+        fin_date = None
+
+    print("Sin DNI")
+    in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
+    in_time_obj = formatDate(in_time_obj) + timedelta(hours=5)
+    out_time_obj = datetime.strptime("{} 23:59:59".format(fin_date), '%d/%m/%Y %H:%M:%S')
+    out_time_obj = formatDate(out_time_obj) + timedelta(hours=5)
+    print("Traer datos de {} hasta {}".format(in_time_obj, out_time_obj))
+    registro_cursor = DB.registros.find(
+        {'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
+    return list(map(fix_id, await registro_cursor.to_list(length=limit)))
 
 
 @registros_router.get("/", response_model=List[RegistroOnDB])
