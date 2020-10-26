@@ -4,6 +4,8 @@ uvicorn main:app --host "0.0.0.0" --port 9776 --log-level "info"  --reload
 
 http://127.0.0.1:9776/docs
 
+asd
+
 docker build -t api_envios:1.0 .
 
 
