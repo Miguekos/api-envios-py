@@ -403,11 +403,20 @@ async def delete_registro_by_id(id_: str):
     [description]
     Endpoint to retrieve an specific registro.
     """
-    registros_op = await DB.registros.delete_one({"_id": ObjectId(id_)})
-    if registros_op.deleted_count:
-        return {"status": f"se elimino la cuenta de: {registros_op.deleted_count}"}
-
-
+    # TODO: buscar el regsitro y validar que el estado sea 0
+    registro = await DB.registros.find_one({"_id": ObjectId(id_)})
+    if registro:
+        # registro["id_"] = str(registro["_id"])
+        # registro["created_at"] = formatDate(registro["created_at"])
+        # registro["last_modified"] = formatDate(registro["last_modified"])
+        if registro["estado"] == "0":
+            print(registro)
+            # return registro
+            registros_op = await DB.registros.delete_one({"_id": ObjectId(id_)})
+            if registros_op.deleted_count:
+                return {"status": f"se elimino la cuenta de: {registros_op.deleted_count}"}
+        else:
+            return {"status": f"No se puede eliminar porque el paquete ya no esta en bodega"}
 #
 #
 @registros_router.put(
@@ -422,6 +431,16 @@ async def update_registro(id_: str, registro_data: dict):
     [description]
     Endpoint to update an specific registro with some or all fields.
     """
+    print("registro_data", registro_data)
+    try:
+        registro_data.pop('registro')
+        registro_data.pop('estado')
+        registro_data.pop('created_at')
+        registro_data.pop('last_modified')
+    except:
+        # pass
+        print(ValueError)
+        print("nada que eliminar")
     lima = pytz.timezone('America/Lima')
     registro_data["last_modified"] = datetime.now(lima)
     registro_op = await DB.registros.update_one(
