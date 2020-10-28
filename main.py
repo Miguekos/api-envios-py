@@ -40,49 +40,49 @@ app.add_middleware(
 )
 app.include_router(
     pets_router,
-    prefix="/envios/pets",
+    prefix="/devenvios/pets",
     tags=["pets"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     registros_router,
-    prefix="/envios/registros",
+    prefix="/devenvios/registros",
     tags=["registros"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     user_router,
-    prefix="/envios/users",
+    prefix="/devenvios/users",
     tags=["users"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     uploadfile_router,
-    prefix="/envios/uploads",
+    prefix="/devenvios/uploads",
     tags=["upload"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     mantenimiento_router,
-    prefix="/envios/mantenimiento",
+    prefix="/devenvios/mantenimiento",
     tags=["mantenimiento"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     reporte_router,
-    prefix="/envios/reporte",
+    prefix="/devenvios/reporte",
     tags=["reporte"],
     responses={404: {"description": "Not found"}},
 )
 
 app.include_router(
     proveedor_router,
-    prefix="/envios/proveedor",
+    prefix="/devenvios/proveedor",
     tags=["proveedor"],
     responses={404: {"description": "Not found"}},
 )

@@ -5,7 +5,7 @@ databases:
   default:
     ENGINE: 'mongodb'
     DRIVER: 'motor'
-    NAME: 'tuenvioexpress'
+    NAME: 'dev_tuenvioexpress'
     USER: ''
     PASSWORD: ''
     HOST: '95.111.235.214'

@@ -1,14 +1,14 @@
 version: "2"
 services:
-  api_envios:
-    container_name: api_envios
-    image: api_envios:1.0
+  dev_api_envios:
+    container_name: dev_api_envios
+    image: dev_api_envios:1.0
     # build: .
-    command: uvicorn main:app --host="0.0.0.0" --port=9776 --reload
+    command: uvicorn main:app --host="0.0.0.0" --port=9766 --reload
     volumes:
-      - /usr/local/volumes/fileserver/envios/:/app/fileserver/
+      - /usr/local/volumes/fileserver/devenvios/:/app/fileserver/
     ports:
-      - "9776:9776"
+      - "9766:9766"
 #services:
   # Our main app
 #  envios:
