@@ -3,9 +3,10 @@ import logging
 from datetime import datetime, timedelta
 from pytz import timezone
 from typing import List
+from typing import Optional
 
 from bson.objectid import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 
 from config.config import DB, CONF
 from .models import RegistroBase, RegistroOnDB, RegistroOnDBQR
@@ -330,43 +331,42 @@ async def get_all_registros(dni: str = None, estado: str = None, ini_date: str =
 
 # @registros_router.post("/", response_model=RegistroOnDB)
 @registros_router.post("/")
-async def add_registro(registro: RegistroBase):
+async def add_registro(registro: RegistroBase, token: Optional[str] = Header(None)):
     """[summary]
     Inserts a new user on the DB.
 
     [description]
     Endpoint to add a new user.
     """
-    try:
-        conteo = DB.registros.find({}, {'registro': 1}).sort('registro', -1).limit(1)
-        conteo = await conteo.to_list(length=1)
-        # registro['registro'] = conteo[0]['registro']
-        registro = registro.dict()
-        registro['registro'] = conteo[0]['registro'] + 1
-    except:
-        registro['registro'] = 0
-    print("registro", registro)
-    registro_op = await DB.registros.insert_one(registro)
-    # await DB.registros.update_one(registro.dict())
-    # print(registro_op.inserted_id)
-    print(registro.pop('_id'))
-    return {
-        "id": str(registro_op.inserted_id),
-        "registro": registro
-    }
+    print("provee", token)
+    buscar_provee = await DB.mantenimiento.find_one({"token": "{}".format(token)})
+    if buscar_provee:
+        registro_provedor = str(buscar_provee["name"])
+        print(registro_provedor)
+        # registro["created_at"] = formatDate(registro["created_at"])
+        # registro["last_modified"] = formatDate(registro["last_modified"])
+        # return registro
+        try:
+            conteo = DB.registros.find({}, {'registro': 1}).sort('registro', -1).limit(1)
+            conteo = await conteo.to_list(length=1)
+            # registro['registro'] = conteo[0]['registro']
+            registro = registro.dict()
+            registro['proveedores'] = registro_provedor
+            registro['registro'] = conteo[0]['registro'] + 1
+        except:
+            registro['registro'] = 0
 
-    # if registro_op.inserted_id:
-    #     registro = await _get_or_404(registro_op.inserted_id)
-    #     registro["id_"] = str(registro['_id'])
-    #     # print(registro)
-    #     return registro
-    # registro["id_"] = str(registro_op.inserted_id)
-    # return registro
-    # if registro_op.inserted_id:
-    #     registro = await _get_or_404(registro_op.inserted_id)
-    #     registro["id_"] = str(registro["_id"])
-    #     return registro
-
+        print("registro", registro)
+        registro_op = await DB.registros.insert_one(registro)
+        # await DB.registros.update_one(registro.dict())
+        # print(registro_op.inserted_id)
+        print(registro.pop('_id'))
+        return {
+            "id": str(registro_op.inserted_id),
+            "registro": registro
+        }
+    else:
+        raise HTTPException(status_code=401, detail="bad auth")
 
 #
 @registros_router.get(
@@ -396,7 +396,7 @@ async def get_registro_by_id(id_: ObjectId = Depends(validate_object_id)):
     dependencies=[Depends(_get_or_404)],
     response_model=dict
 )
-async def delete_registro_by_id(id_: str):
+async def delete_registro_by_id(id_: str, token: Optional[str] = Header(None)):
     """[summary]
     Get one registro by ID.
 
@@ -404,19 +404,32 @@ async def delete_registro_by_id(id_: str):
     Endpoint to retrieve an specific registro.
     """
     # TODO: buscar el regsitro y validar que el estado sea 0
-    registro = await DB.registros.find_one({"_id": ObjectId(id_)})
-    if registro:
-        # registro["id_"] = str(registro["_id"])
-        # registro["created_at"] = formatDate(registro["created_at"])
-        # registro["last_modified"] = formatDate(registro["last_modified"])
-        if registro["estado"] == "0":
-            print(registro)
-            # return registro
-            registros_op = await DB.registros.delete_one({"_id": ObjectId(id_)})
-            if registros_op.deleted_count:
-                return {"status": f"se elimino la cuenta de: {registros_op.deleted_count}"}
-        else:
-            return {"status": f"No se puede eliminar porque el paquete ya no esta en bodega"}
+    print("provee", token)
+    buscar_provee = await DB.mantenimiento.find_one({"token": "{}".format(token)})
+    if buscar_provee:
+        registro_provedor = str(buscar_provee["name"])
+        print(registro_provedor)
+        registro = await DB.registros.find_one({"_id": ObjectId(id_)})
+        if registro:
+            # registro["id_"] = str(registro["_id"])
+            # registro["created_at"] = formatDate(registro["created_at"])
+            # registro["last_modified"] = formatDate(registro["last_modified"])
+            print("estado", "{}".format(registro["estado"]))
+            if registro["estado"] == "0":
+                print(registro)
+                # return registro
+                lima = pytz.timezone('America/Lima')
+                registro["last_modified"] = datetime.now(lima)
+                registro_op = await DB.registros.update_one(
+                    {"_id": ObjectId(id_)}, {"$set": {
+                        "estado" : "3"
+                    }}
+                )
+                return {"status": f"El paquete se elimino correctamente"}
+            else:
+                return {"status": f"No se puede eliminar porque el paquete ya no esta en bodega"}
+    else:
+        raise HTTPException(status_code=401, detail="bad auth")
 #
 #
 @registros_router.put(
@@ -424,7 +437,7 @@ async def delete_registro_by_id(id_: str):
     dependencies=[Depends(validate_object_id), Depends(_get_or_404)],
     response_model=RegistroOnDB
 )
-async def update_registro(id_: str, registro_data: dict):
+async def update_registro(id_: str, registro_data: dict, token: Optional[str] = Header(None)):
     """[summary]
     Update a registro by ID.
 
@@ -432,21 +445,32 @@ async def update_registro(id_: str, registro_data: dict):
     Endpoint to update an specific registro with some or all fields.
     """
     print("registro_data", registro_data)
-    try:
-        registro_data.pop('registro')
-        registro_data.pop('estado')
-        registro_data.pop('created_at')
-        registro_data.pop('last_modified')
-    except:
-        # pass
-        print(ValueError)
-        print("nada que eliminar")
-    lima = pytz.timezone('America/Lima')
-    registro_data["last_modified"] = datetime.now(lima)
-    registro_op = await DB.registros.update_one(
-        {"_id": ObjectId(id_)}, {"$set": registro_data}
-    )
-    if registro_op.modified_count:
-        return await _get_or_404(id_)
+    print("provee", token)
+    buscar_provee = await DB.mantenimiento.find_one({"token": "{}".format(token)})
+    if buscar_provee:
+        registro_provedor = str(buscar_provee["name"])
+        print(registro_provedor)
+        # registro["created_at"] = formatDate(registro["created_at"])
+        # registro["last_modified"] = formatDate(registro["last_modified"])
+        # return registro
+        try:
+            registro_data.pop('registro')
+            registro_data.pop('estado')
+            registro_data.pop('created_at')
+            registro_data.pop('last_modified')
+            registro_data['proveedores'] = registro_provedor
+        except:
+            pass
+            # print(ValueError)
+            # print("nada que eliminar")
+        lima = pytz.timezone('America/Lima')
+        registro_data["last_modified"] = datetime.now(lima)
+        registro_op = await DB.registros.update_one(
+            {"_id": ObjectId(id_)}, {"$set": registro_data}
+        )
+        if registro_op.modified_count:
+            return await _get_or_404(id_)
+        else:
+            raise HTTPException(status_code=304)
     else:
-        raise HTTPException(status_code=304)
+        raise HTTPException(status_code=401, detail="bad auth")

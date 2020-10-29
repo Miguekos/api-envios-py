@@ -2,12 +2,12 @@
 import logging
 from collections import Counter
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 import pytz
 
 from bson.objectid import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 
 from config.config import DB, CONF
 from .models import ReporteBase, ReporteOnDB, ReporteFilter, ReporteHistorico
@@ -59,6 +59,7 @@ def fix_id(resp):
     resp["last_modified"] = formatDate(resp["last_modified"])
     return resp
 
+
 @proveedor_router.get("/find/{idprovee}/{idregistro}")
 async def get_proveedor(idprovee: int = None, idregistro: int = None):
     """[summary]
@@ -70,20 +71,50 @@ async def get_proveedor(idprovee: int = None, idregistro: int = None):
     print("idprovee", idprovee)
     print("idregistro", idregistro)
     try:
-        findProvee = await DB.mantenimiento.find_one({'registro' : idprovee})
+        findProvee = await DB.mantenimiento.find_one({'registro': idprovee})
         print(findProvee['name'])
         global total
         total = []
 
         # buscar = DB.historico.find({})
         # pd.DataFrame(MyList, columns=["x"]).groupby('x').size().to_dict()
-        registro_cursor = DB.registros.find({'proveedores' : '{}'.format(findProvee['name']), 'registro' : idregistro})
+        registro_cursor = DB.registros.find({'proveedores': '{}'.format(findProvee['name']), 'registro': idregistro})
         # print("registro_cursor",await registro_cursor)
         # registro_cursor = DB.registros.find()
         return list(map(fix_id_provee, await registro_cursor.to_list(None)))
     except:
         # print(ValueError)
         raise HTTPException(status_code=500, detail="Error controlado")
+
+
+@proveedor_router.get("/buscar/{idregistro}")
+async def get_proveedor_buscar(idregistro: int = None, token: Optional[str] = Header(None)):
+    """[summary]
+    Obtener proveedors.
+
+    [description]
+    Reportes por fechas.
+    """
+    print("idregistro", idregistro)
+    print("provee", token)
+    buscar_provee = await DB.mantenimiento.find_one({"token": "{}".format(token)})
+    if buscar_provee:
+        registro_provedor = str(buscar_provee["name"])
+        print(registro_provedor)
+        try:
+            global total
+            total = []
+            # buscar = DB.historico.find({})
+            # pd.DataFrame(MyList, columns=["x"]).groupby('x').size().to_dict()
+            registro_cursor = DB.registros.find({'proveedores': '{}'.format(registro_provedor), 'registro': idregistro})
+            # print("registro_cursor",await registro_cursor)
+            # registro_cursor = DB.registros.find()
+            return list(map(fix_id_provee, await registro_cursor.to_list(None)))
+        except:
+            # print(ValueError)
+            raise HTTPException(status_code=500, detail="Error controlado - Verifica la query")
+    else:
+        raise HTTPException(status_code=401, detail="bad auth")
 
 
 @proveedor_router.get("/all/{idprovee}")
@@ -96,14 +127,14 @@ async def get_proveedor(idprovee: int = None):
     """
     print("idprovee", idprovee)
     try:
-        findProvee = await DB.mantenimiento.find_one({'registro' : idprovee})
+        findProvee = await DB.mantenimiento.find_one({'registro': idprovee})
         print(findProvee['name'])
         global total
         total = []
 
         # buscar = DB.historico.find({})
         # pd.DataFrame(MyList, columns=["x"]).groupby('x').size().to_dict()
-        registro_cursor = DB.registros.find({'proveedores' : '{}'.format(findProvee['name'])})
+        registro_cursor = DB.registros.find({'proveedores': '{}'.format(findProvee['name'])})
         bodega = []
         asignados = []
         entregados = []
@@ -126,7 +157,7 @@ async def get_proveedor(idprovee: int = None):
             "total_bodega": len(bodega),
             "total_asignados": len(asignados),
             "total_entregados": len(entregados),
-            "total" : len(total)
+            "total": len(total)
         }
         # print("registro_cursor",await registro_cursor)
         # registro_cursor = DB.registros.find()
@@ -156,48 +187,43 @@ async def get_proveedor(idprovee: int = None):
 
 
 @proveedor_router.get("/")
-async def get_proveedor(ini_date: str = None, fin_date: str = None, provee: int = None, estado : str = None):
+async def get_proveedor(all: str = "all", ini_date: str = None, fin_date: str = None,
+                        estado: str = None, token: Optional[str] = Header(None)):
     """[summary]
     Obtener proveedors.
 
     [description]
     Reportes por fechas.
     """
-    try:
-        findProvee = await DB.mantenimiento.find_one({'registro' : provee})
-        # print(findProvee['name'])
-        global total
-        total = []
-        # pd.DataFrame(MyList, columns=["x"]).groupby('x').size().to_dict()
-        in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
-        in_time_obj = formatDate(in_time_obj) + timedelta(hours=5)
-        out_time_obj = datetime.strptime("{} 23:59:59".format(fin_date), '%d/%m/%Y %H:%M:%S')
-        out_time_obj = formatDate(out_time_obj) + timedelta(hours=5)
-        print("Traer datos de {} hasta {}".format(in_time_obj, out_time_obj))
-        registro_cursor = DB.registros.find({'proveedores' : '{}'.format(findProvee['name']), 'estado' : estado , 'last_modified': {"$gte": in_time_obj, "$lt": out_time_obj}})
-        # registro_cursor = DB.registros.find()
-        return list(map(fix_id_provee, await registro_cursor.to_list(None)))
-    except:
-        raise HTTPException(status_code=500, detail="Error controlado")
-    # for docs in await registro_cursor.to_list(None):
-    #     total.append(fix_id_provee(docs))
-    #     # print(nameMobil(docs['responsable']))
-    #     # responsables.append(nameMobil(docs['responsable']))
-    # print(total)
-    # return { list(total) }
-    # except:
-    #     return {
-    #         "total_registro": len(total),
-    #         "total_pagado": len(total_pagado),
-    #         "total_por_pagado": len(total_por_pagado),
-    #         "total_credito": len(total_credito),
-    #         "comunasKeys": keys_comunas,
-    #         "comunasValue": values_comunas,
-    #         "proveedoresKeys": keys_proveedores,
-    #         "proveedoresValue": values_proveedores,
-    #         "responsablesKeys": keys_responsables,
-    #         "responsablesValue": values_responsables
-    #     }
+    print(all)
+    print("provee", token)
+    buscar_provee = await DB.mantenimiento.find_one({"token": "{}".format(token)})
+    if buscar_provee:
+        registro_provedor = str(buscar_provee["name"])
+        print(registro_provedor)
+        print("estado", estado)
+        if estado:
+            try:
+                # findProvee = await DB.mantenimiento.find_one({'registro' : registro_provedor})
+                global total
+                total = []
+                in_time_obj = datetime.strptime("{} 00:00:00".format(ini_date), '%d/%m/%Y %H:%M:%S')
+                in_time_obj = formatDate(in_time_obj) + timedelta(hours=5)
+                out_time_obj = datetime.strptime("{} 23:59:59".format(fin_date), '%d/%m/%Y %H:%M:%S')
+                out_time_obj = formatDate(out_time_obj) + timedelta(hours=5)
+                print("Traer datos de {} hasta {}".format(in_time_obj, out_time_obj))
+                registro_cursor = DB.registros.find({'proveedores': '{}'.format(registro_provedor), 'estado': estado,
+                                                     'last_modified': {"$gte": in_time_obj, "$lt": out_time_obj}})
+                # registro_cursor = DB.registros.find()
+                return list(map(fix_id_provee, await registro_cursor.to_list(None)))
+            except:
+                raise HTTPException(status_code=500, detail="Error controlado - Verificar las query")
+        else:
+            registro_cursor = DB.registros.find({'proveedores': '{}'.format(registro_provedor)})
+            # registro_cursor = DB.registros.find()
+            return list(map(fix_id_provee, await registro_cursor.to_list(None)))
+    else:
+        raise HTTPException(status_code=401, detail="bad auth")
 
 
 @proveedor_router.get("/historico")
