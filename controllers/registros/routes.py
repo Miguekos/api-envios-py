@@ -381,6 +381,7 @@ async def add_registro(registro: RegistroBase, token: Optional[str] = Header(Non
         print(x.content)
         # await DB.registros.update_one(registro.dict())
         # print(registro_op.inserted_id)
+        registro['registro'] = int(registro['registro'])
 
         return {
             "id": str(registro_op.inserted_id),
