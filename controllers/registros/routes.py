@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from pytz import timezone
 from typing import List
 from typing import Optional
+import json
+import requests
 
 from bson.objectid import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Header
@@ -357,13 +359,33 @@ async def add_registro(registro: RegistroBase, token: Optional[str] = Header(Non
             registro['registro'] = 0
 
         print("registro", registro)
+        url = 'http://95.111.235.214:5454/ticketpdf'
         registro_op = await DB.registros.insert_one(registro)
-        # await DB.registros.update_one(registro.dict())
-        # print(registro_op.inserted_id)
         print(registro.pop('_id'))
-        return {
+        registro.pop('last_modified')
+        print(registro['created_at'])
+        print("registro_op", registro_op)
+        # registro.pop('created_at')
+        registro['created_at'] = "{}".format(registro['created_at'])
+        # print("registro_op_fecha", registro_op['created_at'])
+        print("registro", registro)
+        myobj = {
             "id": str(registro_op.inserted_id),
             "registro": registro
+            # "ticket": "http://95.111.235.214:5454/fileserver/uploads/{}.pdf".format(registro['registro'])
+        }
+        headers = {'content-type': 'application/json'}
+        data = json.dumps(myobj)
+        print("myobj", myobj)
+        x = requests.post(url, data=data, headers=headers)
+        print(x.content)
+        # await DB.registros.update_one(registro.dict())
+        # print(registro_op.inserted_id)
+
+        return {
+            "id": str(registro_op.inserted_id),
+            "registro": registro,
+            "ticket" : "https://api.apps.com.pe/fileserver/tickets/{}.pdf".format(int(registro['registro']))
         }
     else:
         raise HTTPException(status_code=401, detail="bad auth")
