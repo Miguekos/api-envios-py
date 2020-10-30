@@ -2,8 +2,10 @@ version: "2"
 services:
   dev_api_envios:
     container_name: dev_api_envios
-    image: dev_api_envios:1.0
-    # build: .
+#    image: dev_api_envios:1.0
+    build:
+      context: .
+      dockerfile: Dockerfile
     command: uvicorn main:app --host="0.0.0.0" --port=9766 --reload
     volumes:
       - /usr/local/volumes/fileserver/devenvios/:/app/fileserver/
