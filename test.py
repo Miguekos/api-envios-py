@@ -27,4 +27,13 @@ import requests, base64
 #     print(response.text)
 #
 #
-# enviarSms()
+def enviarSms(telf, registro):
+    url = "https://api.labsmobile.com/get/send.php?username=administracion@texcargo.cl&password=dc98pr83&message=TexCargo te invita a verificar el status de tu paquete visitando: https://tuenvioweb.apps.com.pe/tracking.php?id={}&msisdn={}&sender=34609033163".format(
+        registro, telf)
+    print(url)
+
+    response = requests.request("GET", url)
+
+    print(response.text)
+
+enviarSms("51965778450", 123456)

@@ -193,7 +193,8 @@ async def add_asing_qr(registro: int, registro_data: dict):
                 print("Paquete asigando correctamente")
                 message = "Paquete asigando correctamente"
                 if telf:
-                    enviarSms(telf, registro)
+                    pass
+                    # enviarSms(telf, registro)
             elif estado == "1":
                 print("Ya fue asignado")
                 message = "Ya fue asignado"
