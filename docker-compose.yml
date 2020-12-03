@@ -2,7 +2,7 @@ version: "2"
 services:
   api_envios:
     container_name: api_envios
-    image: api_envios:1.0
+    image: api_envios:2.0
     # build: .
     command: uvicorn main:app --host="0.0.0.0" --port=9776 --reload
     volumes:
