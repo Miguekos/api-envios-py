@@ -13,7 +13,7 @@ from .models import RegistroBase, RegistroOnDB, RegistroOnDBQR
 import pytz
 
 registros_router = APIRouter()
-import requests, base64
+import requests
 
 
 async def nameMobil(resp):
