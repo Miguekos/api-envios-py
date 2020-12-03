@@ -9,7 +9,6 @@ from controllers.mantenimiento.routes import mantenimiento_router
 from controllers.reportes.routes import reporte_router
 from controllers.proveedor.routes import proveedor_router
 
-
 from config import config
 
 app = FastAPI()
@@ -28,7 +27,9 @@ origins = [
     "http://192.168.0.32:8080",
     "http://192.168.0.10:8080",
     "http://95.111.235.214:9776",
-    "https://tuenvioexpress.apps.com.pe/"
+    "http://192.168.1.2:9776",
+    "https://tuenvioexpress.apps.com.pe/",
+    "http://tuenvioexpressweb.test/"
 ]
 
 app.add_middleware(
@@ -87,6 +88,7 @@ app.include_router(
     responses={404: {"description": "Not found"}},
 )
 
+
 @app.on_event("startup")
 async def app_startup():
     """
@@ -104,10 +106,9 @@ async def app_shutdown():
     # This does finish the DB driver connection.
     config.close_db_client()
 
-
 # if __name__ == "__main__":
-    # uvicorn.run("main:app", host="0.0.0.0", port=9776)
-    # uvicorn.run("main:app", host="0.0.0.0", port=9776, log_level="info", loop="asyncio")
+# uvicorn.run("main:app", host="0.0.0.0", port=9776)
+# uvicorn.run("main:app", host="0.0.0.0", port=9776, log_level="info", loop="asyncio")
 #
 # if __name__ == "__main__":
 #     uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info", loop="asyncio")

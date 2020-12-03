@@ -161,7 +161,7 @@ async def get_reporte_tipodepagos(ini_date: str = None):
     """
     # pd.DataFrame(MyList, columns=["x"]).groupby('x').size().to_dict()
     if ini_date is None:
-        buscar = DB.historico.find({})
+        buscar = DB.historico.find({}).sort('$natural', -1).limit(30)
         # buscar = DB.historico.find({}, {'_id': 0})
         # return await buscar.to_list(None)
         # users = await buscar.to_list(None)

@@ -13,6 +13,7 @@ from .models import RegistroBase, RegistroOnDB, RegistroOnDBQR
 import pytz
 
 registros_router = APIRouter()
+import requests, base64
 
 
 async def nameMobil(resp):
@@ -32,6 +33,15 @@ async def nameMobil(resp):
 #         return val
 #     except:
 #         print("Ya tenia")
+
+
+def enviarSms(telf, registro):
+    url = "https://api.labsmobile.com/get/send.php?username=administracion@texcargo.cl&password=dc98pr83&message=TexCargo te invita a verificar el status de tu paquete visitando: https://tuenvioweb.apps.com.pe/tracking.php?id={}&msisdn={}&sender=34609033163".format(
+        registro, telf)
+
+    response = requests.request("GET", url)
+
+    print(response.text)
 
 
 def validate_object_id(id_: str):
@@ -93,9 +103,6 @@ async def get_count():
     return conteo[0]['registro']
 
 
-
-
-
 @registros_router.get("/findMobil/{dnimobil}")
 async def get_proveedor(dnimobil: int = None):
     """[summary]
@@ -111,7 +118,7 @@ async def get_proveedor(dnimobil: int = None):
 
         # buscar = DB.historico.find({})
         # pd.DataFrame(MyList, columns=["x"]).groupby('x').size().to_dict()
-        registro_cursor = DB.registros.find({'responsable' : '{}'.format(dnimobil)})
+        registro_cursor = DB.registros.find({'responsable': '{}'.format(dnimobil)})
         bodega = []
         asignados = []
         entregados = []
@@ -134,7 +141,7 @@ async def get_proveedor(dnimobil: int = None):
             "total_bodega": len(bodega),
             "total_asignados": len(asignados),
             "total_entregados": len(entregados),
-            "total" : len(total)
+            "total": len(total)
         }
         # print("registro_cursor",await registro_cursor)
         # registro_cursor = DB.registros.find()
@@ -174,6 +181,7 @@ async def add_asing_qr(registro: int, registro_data: dict):
         if buscar_registro:
             buscar_registro = await buscar_registro.to_list(length=1)
             estado = buscar_registro[0]['estado']
+            telf = buscar_registro[0]['telf']
             print("estado", estado)
             if estado == "0":
                 lima = pytz.timezone('America/Lima')
@@ -184,6 +192,8 @@ async def add_asing_qr(registro: int, registro_data: dict):
                 )
                 print("Paquete asigando correctamente")
                 message = "Paquete asigando correctamente"
+                if telf:
+                    enviarSms(telf, registro)
             elif estado == "1":
                 print("Ya fue asignado")
                 message = "Ya fue asignado"
@@ -244,6 +254,51 @@ async def get_all_registros(ini_date: str = None, fin_date: str = None,
     registro_cursor = DB.registros.find(
         {'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
     return list(map(fix_id, await registro_cursor.to_list(length=limit)))
+
+
+# sms
+@registros_router.get("/sms/{telf}/{registro}")
+async def send_sms(telf: str, registro: str):
+    """[summary]
+    Gets all registros.
+
+    [description]
+    Endpoint to retrieve registros.
+    """
+    # print(id)
+    # registro = await DB.registros.find_one({"registro": id})
+    # if registro:
+    #     print(registro)
+    # registro["id_"] = str(registro["_id"])
+    # registro.pop('_id')
+    # registro["created_at"] = formatDate(registro["created_at"])
+    # registro["last_modified"] = formatDate(registro["last_modified"])
+    enviarSms(telf, registro)
+    return {
+        "message": "mensaje enviado correctamente"
+    }
+
+
+# tracking
+@registros_router.get("/tracking/{id}")
+async def get_packet_tranking(id: int):
+    """[summary]
+    Gets all registros.
+
+    [description]
+    Endpoint to retrieve registros.
+    """
+    print(id)
+    registro = await DB.registros.find_one({"registro": id})
+    if registro:
+        print(registro)
+        # registro["id_"] = str(registro["_id"])
+        registro.pop('_id')
+        # registro["created_at"] = formatDate(registro["created_at"])
+        # registro["last_modified"] = formatDate(registro["last_modified"])
+        return registro
+    else:
+        raise HTTPException(status_code=404, detail="not found")
 
 
 @registros_router.get("/", response_model=List[RegistroOnDB])
