@@ -36,7 +36,8 @@ async def nameMobil(resp):
 
 
 def enviarSms(telf, registro):
-    url = "https://api.labsmobile.com/get/send.php?username=administracion@texcargo.cl&password=dc98pr83&message=TexCargo te invita a verificar el status de tu paquete visitando: https://tuenvioweb.apps.com.pe/tracking.php?id={}&msisdn={}&sender=34609033163".format(
+    url = "https://api.labsmobile.com/get/send.php?username=administracion@texcargo.cl&password=dc98pr83&message=TexCargo le notifica que se le a realizado un envio con numero de orden {}, para mas informacion dirigete a https://tuenvioweb.apps.com.pe/tracking.php?id={}&msisdn={}&sender=34609033163".format(
+        registro,
         registro, telf)
 
     response = requests.request("GET", url)
@@ -399,6 +400,9 @@ async def add_registro(registro: RegistroBase):
         # registro['registro'] = conteo[0]['registro']
         registro = registro.dict()
         registro['registro'] = conteo[0]['registro'] + 1
+        registroID = registro['registro']
+        Telf = registro['telf']
+        enviarSms(Telf, registroID)
     except:
         registro['registro'] = 0
     print("registro", registro)
