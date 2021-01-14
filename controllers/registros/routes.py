@@ -37,7 +37,7 @@ async def nameMobil(resp):
 
 def enviarSms(telf, registro):
     print("enviarSms", telf, registro)
-    url = "https://api.labsmobile.com/get/send.php?username=administracion@texcargo.cl&password=dc98pr83&message=TexCargo le notifica que se le a realizado un envio con numero de orden {}, para mas informacion dirigete a https://texcargoweb.apps.com.pe/tracking.php?id={}&msisdn=56{}&sender=34609033163".format(
+    url = "https://api.labsmobile.com/get/send.php?username=administracion@texcargo.cl&password=t3xc4rg0cl2021&message=TexCargo le notifica que se le a realizado un envio con numero de orden {}, para mas informacion dirigete a https://texcargoweb.apps.com.pe/tracking.php?id={}&msisdn=56{}&sender=34609033163".format(
         registro,
         registro, telf)
     print(url)
