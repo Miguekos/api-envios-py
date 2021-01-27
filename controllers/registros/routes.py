@@ -37,7 +37,7 @@ async def nameMobil(resp):
 
 def enviarSms(telf, registro):
     print("enviarSms", telf, registro)
-    url = "https://api.labsmobile.com/get/send.php?username=administracion@texcargo.cl&password=t3xc4rg0cl2021&message=TexCargo le notifica que se le a realizado un envio con numero de orden {}, para mas informacion dirigete a https://texcargoweb.apps.com.pe/tracking.php?id={}&msisdn=56{}&sender=34609033163".format(
+    url = "https://api.labsmobile.com/get/send.php?username=administracion@texcargo.cl&password=t3xc4rg0cl2021&message=TexCargo le notifica que se le a realizado un envio con numero de orden {}, para mas informacion dirigete a https://tracking.texcargo.cl/tracking.php?id={}&msisdn=56{}&sender=34609033163".format(
         registro,
         registro, telf)
     print(url)
@@ -231,7 +231,7 @@ async def reparar():
 
 
 @registros_router.get("/buscar", response_model=List[RegistroOnDB])
-async def get_all_registros(ini_date: str = None, fin_date: str = None,
+async def get_all_registros(ini_date: str = None, fin_date: str = None, provee: str = None,
                             limit: int = 0, skip: int = 0):
     """[summary]
     Gets all registros.
@@ -242,6 +242,7 @@ async def get_all_registros(ini_date: str = None, fin_date: str = None,
 
     print("ini_date", ini_date)
     print("fin_date", fin_date)
+    print("provee", provee)
     global registro_cursor
     if ini_date == "null":
         ini_date = None
@@ -255,7 +256,12 @@ async def get_all_registros(ini_date: str = None, fin_date: str = None,
     out_time_obj = formatDate(out_time_obj) + timedelta(hours=5)
     print("Traer datos de {} hasta {}".format(in_time_obj, out_time_obj))
     registro_cursor = DB.registros.find(
-        {'created_at': {"$gte": in_time_obj, "$lt": out_time_obj}}).skip(skip).limit(limit)
+        {
+            'created_at': {"$gte": in_time_obj, "$lt": out_time_obj},
+            'proveedores' : "{}".format(provee)
+
+        }
+    ).skip(skip).limit(limit)
     return list(map(fix_id, await registro_cursor.to_list(length=limit)))
 
 
